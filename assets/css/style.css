@@ -23,7 +23,7 @@
     --font-body: 'Inter', sans-serif;
 
     /* UI Elements */
-    --border-radius-sm: 2px; /* Keeping the "Edge" */
+    --border-radius-sm: 2px;
     --border-radius-md: 4px;
     --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     --transition: all 0.3s ease;
@@ -43,7 +43,16 @@ body {
     color: var(--color-text-main);
     background-color: var(--color-bg-main);
     line-height: 1.6;
-    -webkit-font-smoothing: antialiased; /* Makes text look sharper */
+    -webkit-font-smoothing: antialiased;
+    
+    /* STICKY FOOTER FIX */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1; /* Forces main content to push footer down */
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -68,13 +77,13 @@ img {
 /* =========================================
    4. UTILITY CLASSES
    ========================================= */
-/* Container to keep content centered and prevent it from stretching too wide on large screens */
 .container {
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 20px;
 }
+
 /* =========================================
    5. BUTTONS & COMPONENTS
    ========================================= */
@@ -93,7 +102,7 @@ img {
 }
 
 .btn-primary:hover {
-    background-color: #e06814; /* Slightly darker orange */
+    background-color: #e06814;
     color: var(--color-white);
 }
 
@@ -142,7 +151,7 @@ img {
 }
 
 .mobile-menu-btn {
-    display: none; /* Hidden on desktop */
+    display: none;
     background: none;
     border: none;
     font-size: 1.5rem;
@@ -190,7 +199,7 @@ img {
 .footer-bottom {
     text-align: center;
     padding: 1.5rem;
-    background-color: #0f1f4d; /* Darker shade of primary */
+    background-color: #0f1f4d;
     font-size: 0.875rem;
 }
 
@@ -203,7 +212,7 @@ img {
     height: 60px;
     bottom: 40px;
     right: 40px;
-    background-color: #25d366; /* Official WhatsApp Green */
+    background-color: #25d366;
     color: #FFF;
     border-radius: 50px;
     text-align: center;
@@ -226,22 +235,23 @@ img {
    ========================================= */
 @media (max-width: 768px) {
     .desktop-nav {
-        display: none; /* Hide standard links on mobile */
+        display: none;
     }
     
     .mobile-menu-btn {
-        display: block; /* Show hamburger icon */
+        display: block;
     }
     
     .nav-actions .btn {
-        display: none; /* Hide "Get in Touch" button on small screens */
+        display: none;
     }
 }
+
 /* =========================================
    10. MOBILE MENU STYLES
    ========================================= */
 .mobile-menu {
-    display: none; /* Hidden by default */
+    display: none;
     background-color: var(--color-white);
     border-top: 1px solid #e2e8f0;
     padding: 1rem 20px 2rem;
@@ -249,10 +259,9 @@ img {
     position: absolute;
     width: 100%;
     left: 0;
-    top: 80px; /* Right below the header */
+    top: 80px;
 }
 
-/* This class will be toggled by JavaScript */
 .mobile-menu.active {
     display: block; 
 }
