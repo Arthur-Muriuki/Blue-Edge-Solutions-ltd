@@ -75,3 +75,206 @@ img {
     margin: 0 auto;
     padding: 0 20px;
 }
+/* =========================================
+   5. BUTTONS & COMPONENTS
+   ========================================= */
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: var(--border-radius-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-primary {
+    background-color: var(--color-accent);
+    color: var(--color-white);
+}
+
+.btn-primary:hover {
+    background-color: #e06814; /* Slightly darker orange */
+    color: var(--color-white);
+}
+
+/* =========================================
+   6. HEADER & NAVIGATION
+   ========================================= */
+.main-header {
+    background-color: var(--color-white);
+    box-shadow: var(--box-shadow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 80px;
+}
+
+.brand-logo {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-primary);
+}
+
+.brand-logo span {
+    color: var(--color-accent);
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 2rem;
+}
+
+.nav-links a {
+    color: var(--color-text-heading);
+    font-weight: 500;
+}
+
+.nav-links a:hover {
+    color: var(--color-secondary);
+}
+
+.mobile-menu-btn {
+    display: none; /* Hidden on desktop */
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--color-primary);
+}
+
+/* =========================================
+   7. FOOTER
+   ========================================= */
+.main-footer {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    padding-top: 3rem;
+}
+
+.footer-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.main-footer h3, .main-footer h4 {
+    color: var(--color-white);
+    margin-bottom: 1rem;
+}
+
+.main-footer a {
+    color: #cbd5e1;
+}
+
+.main-footer a:hover {
+    color: var(--color-secondary);
+}
+
+.main-footer ul {
+    list-style: none;
+}
+
+.main-footer ul li {
+    margin-bottom: 0.5rem;
+}
+
+.footer-bottom {
+    text-align: center;
+    padding: 1.5rem;
+    background-color: #0f1f4d; /* Darker shade of primary */
+    font-size: 0.875rem;
+}
+
+/* =========================================
+   8. WHATSAPP FLOATING BUTTON
+   ========================================= */
+.whatsapp-float {
+    position: fixed;
+    width: 60px;
+    height: 60px;
+    bottom: 40px;
+    right: 40px;
+    background-color: #25d366; /* Official WhatsApp Green */
+    color: #FFF;
+    border-radius: 50px;
+    text-align: center;
+    font-size: 30px;
+    box-shadow: 2px 2px 15px rgba(0,0,0,0.2);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.whatsapp-float:hover {
+    transform: translateY(-5px);
+    box-shadow: 2px 5px 20px rgba(0,0,0,0.3);
+}
+
+/* =========================================
+   9. RESPONSIVE DESIGN (MOBILE)
+   ========================================= */
+@media (max-width: 768px) {
+    .desktop-nav {
+        display: none; /* Hide standard links on mobile */
+    }
+    
+    .mobile-menu-btn {
+        display: block; /* Show hamburger icon */
+    }
+    
+    .nav-actions .btn {
+        display: none; /* Hide "Get in Touch" button on small screens */
+    }
+}
+/* =========================================
+   10. MOBILE MENU STYLES
+   ========================================= */
+.mobile-menu {
+    display: none; /* Hidden by default */
+    background-color: var(--color-white);
+    border-top: 1px solid #e2e8f0;
+    padding: 1rem 20px 2rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    position: absolute;
+    width: 100%;
+    left: 0;
+    top: 80px; /* Right below the header */
+}
+
+/* This class will be toggled by JavaScript */
+.mobile-menu.active {
+    display: block; 
+}
+
+.mobile-nav-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.mobile-nav-links a {
+    color: var(--color-text-heading);
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: block;
+}
+
+.mobile-nav-links a:hover {
+    color: var(--color-secondary);
+}
+
+.mobile-contact-link {
+    color: var(--color-accent) !important;
+}
