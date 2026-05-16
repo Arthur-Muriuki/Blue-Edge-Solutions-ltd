@@ -1,0 +1,77 @@
+/* =========================================
+   1. GOOGLE FONTS IMPORT
+   ========================================= */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@500;700;800&display=swap');
+
+/* =========================================
+   2. DESIGN SYSTEM (CSS VARIABLES)
+   ========================================= */
+:root {
+    /* Brand Colors */
+    --color-primary: #1E3A8A; 
+    --color-secondary: #0EA5E9; 
+    --color-accent: #F97316; 
+    
+    /* Neutrals */
+    --color-text-main: #334155; 
+    --color-text-heading: #0F172A; 
+    --color-bg-main: #F8FAFC; 
+    --color-white: #FFFFFF;
+
+    /* Typography */
+    --font-heading: 'Montserrat', sans-serif;
+    --font-body: 'Inter', sans-serif;
+
+    /* UI Elements */
+    --border-radius-sm: 2px; /* Keeping the "Edge" */
+    --border-radius-md: 4px;
+    --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --transition: all 0.3s ease;
+}
+
+/* =========================================
+   3. CSS RESET & BASE STYLES
+   ========================================= */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-body);
+    color: var(--color-text-main);
+    background-color: var(--color-bg-main);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased; /* Makes text look sharper */
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    color: var(--color-text-heading);
+    margin-bottom: 1rem;
+    line-height: 1.2;
+}
+
+a {
+    text-decoration: none;
+    color: var(--color-primary);
+    transition: var(--transition);
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* =========================================
+   4. UTILITY CLASSES
+   ========================================= */
+/* Container to keep content centered and prevent it from stretching too wide on large screens */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
