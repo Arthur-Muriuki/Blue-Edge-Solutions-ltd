@@ -15,7 +15,7 @@
             <div class="footer-contact">
                 <h4>Contact Us</h4>
                 <p><i class="ph ph-envelope-simple"></i> info@blueedgesolutions.co.ke</p>
-                <p><i class="ph ph-phone"></i> +254 700 000 000</p>
+                <p><i class="ph ph-phone"></i> +254 722 942 293</p>
             </div>
         </div>
         <div class="footer-bottom">
@@ -23,7 +23,7 @@
         </div>
     </footer>
 
-    <a href="https://wa.me/254700000000" class="whatsapp-float" target="_blank" rel="noopener noreferrer" aria-label="Chat with us on WhatsApp">
+    <a href="https://wa.me/254722942293" class="whatsapp-float" target="_blank" rel="noopener noreferrer" aria-label="Chat with us on WhatsApp">
         <i class="ph-fill ph-whatsapp-logo"></i>
     </a>
 

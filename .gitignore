@@ -1,0 +1,4 @@
+.DS_Store
+Thumbs.db
+/includes/db_connect.php
+*.log
