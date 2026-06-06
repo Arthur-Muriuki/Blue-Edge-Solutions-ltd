@@ -51,7 +51,7 @@ include_once 'includes/header.php';
                     </svg>
                     <div>
                         <strong style="display: block; font-size: 1.1rem; margin-bottom: 5px;">Phone</strong>
-                        <span style="color: #cbd5e1;">+254 722 942 293</span>
+                        <span style="color: #cbd5e1;">+254 722 942 293/+254 733 775 544</span>
                     </div>
                 </div>
 
@@ -61,7 +61,7 @@ include_once 'includes/header.php';
                     </svg>
                     <div>
                         <strong style="display: block; font-size: 1.1rem; margin-bottom: 5px;">Email</strong>
-                        <span style="color: #cbd5e1;">info@blueedgesolutions.co.ke</span>
+                        <span style="color: #cbd5e1;">@Blueedge-sl.com</span>
                     </div>
                 </div>
             </div>

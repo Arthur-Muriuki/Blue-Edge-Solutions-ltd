@@ -38,20 +38,38 @@ include_once 'includes/header.php';
                     
                     // Assign a specific color based on category
                     $badge_color = "#002d62"; 
-                    if($row['category'] == 'Cybersecurity') $badge_color = "#ff7300";
+                    if(strcasecmp($row['category'], 'Cybersecurity') == 0) $badge_color = "#ff7300";
+
+                    // Sanitize the slug for search matching
+                    $slug_search = strtolower(trim($row['slug']));
+                    
+                    // Partial keyword search evaluation
+                    if (strpos($slug_search, 'threats') !== false) {
+                        $image_file = "Cybersecurity.jpeg";
+                    } elseif (strpos($slug_search, 'backup') !== false) {
+                        $image_file = "Cloud Backup.jpeg";
+                    } elseif (strpos($slug_search, 'secure') !== false || strpos($slug_search, 'network') !== false) {
+                        $image_file = "Network Security.jpeg";
+                    } elseif (strpos($slug_search, 'phishing') !== false || strpos($slug_search, 'ransomware') !== false) {
+                        $image_file = "Modern Phishing and Ransomware.jpeg";
+                    } else {
+                        // Fallback image if no keywords hit
+                        $image_file = "Cybersecurity.jpeg";
+                    }
             ?>
             
             <article style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.03); transition: transform 0.2s ease; display: flex; flex-direction: column;">
-                <div style="background: #e2e8f0; height: 220px; display: flex; align-items: center; justify-content: center; position: relative;">
-                    <span style="position: absolute; top: 15px; left: 15px; background: <?php echo $badge_color; ?>; color: white; padding: 5px 12px; font-size: 0.8rem; font-weight: bold; border-radius: 4px; text-transform: uppercase;">
+                <div style="background: #e2e8f0; height: 220px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;">
+                    
+                    <span style="position: absolute; top: 15px; left: 15px; background: <?php echo $badge_color; ?>; color: white; padding: 5px 12px; font-size: 0.8rem; font-weight: bold; border-radius: 4px; text-transform: uppercase; z-index: 10;">
                         <?php echo htmlspecialchars($row['category']); ?>
                     </span>
                     
-                    <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" fill="#94a3b8" viewBox="0 0 16 16">
-                        <path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/>
-                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-                    </svg>
+                    <img src="assets/images/<?php echo $image_file; ?>" 
+                         alt="<?php echo htmlspecialchars($row['title']); ?>" 
+                         style="width: 100%; height: 100%; object-fit: cover; display: block;">
                 </div>
+
                 <div style="padding: 30px; display: flex; flex-direction: column; flex-grow: 1;">
                     <time datetime="<?php echo $row['publish_date']; ?>" style="color: #64748b; font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; display: block;">
                         <?php echo $formatted_date; ?>

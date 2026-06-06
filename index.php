@@ -7,11 +7,11 @@ include_once 'includes/header.php';
     <div style="max-width: 800px; margin: 0 auto;">
         
         <h1 style="font-size: 3.5rem; margin-bottom: 20px; color:#cbd5e1; font-weight: 800; line-height: 1.2; letter-spacing: -1px;">
-            Welcome to Blue Edge Solutions
+            Welcome to Blue Edge Solutions Limited
         </h1>
         
         <p style="font-size: 1.25rem; color: #cbd5e1; margin-bottom: 40px; line-height: 1.6;">
-            Enterprise-grade IT Infrastructure, Cloud Management, and Cyber Security tailored for the Kenyan business landscape.
+            Giving you peace of mind, to continue what you like doing best!
         </p>
         
         <a href="contact.php" style="background-color: #ff7300; color: white; padding: 15px 40px; text-decoration: none; font-size: 1.2rem; font-weight: bold; border-radius: 4px; box-shadow: 0 4px 15px rgba(255, 115, 0, 0.3); display: inline-block;">

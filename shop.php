@@ -12,7 +12,7 @@ include_once 'includes/header.php';
         <div style="max-width: 900px; margin: 0 auto;">
             <h1 style="font-size: 2.8rem; font-weight: 700; color:#e2e8f0; margin: 10px 0 15px 0;">Hardware & Service Shop</h1>
             <p style="font-size: 1.1rem; color: #cbd5e1; max-width: 600px; margin: 0 auto;">
-                Upgrade your infrastructure with enterprise-grade networking equipment or book our specialized IT service packages directly.
+                Upgrade your infrastructure with enterprise-grade networking equipment, premium consumables, or book our specialized IT service packages directly.
             </p>
         </div>
     </section>
@@ -22,10 +22,8 @@ include_once 'includes/header.php';
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px;">
 
             <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column;">
-                <div style="background: #e2e8f0; height: 200px; display: flex; align-items: center; justify-content: center; color: #64748b;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0m2.07 11.207a.5.5 0 0 1-.707.008C8.5 10.454 7.5 10.454 6.637 11.215a.5.5 0 1 1-.674-.738c1.176-1.074 2.9-1.074 4.074 0a.5.5 0 0 1 .033.73zM5.145 9.878a.5.5 0 1 1-.724-.69C5.83 7.75 10.17 7.75 11.58 9.188a.5.5 0 0 1-.724.69c-1.09-1.053-4.32-1.053-5.71 0zM3.66 8.358a.5.5 0 0 1-.742-.67c1.92-2.124 7.243-2.124 9.164 0a.5.5 0 1 1-.742.67c-1.503-1.663-5.683-1.663-7.68 0z"/>
-                    </svg>
+                <div style="background: #f8fafc; height: 220px; display: flex; align-items: center; justify-content: center; padding: 15px;">
+                    <img src="assets/images/wifi 6 router.jpeg" alt="Enterprise Wi-Fi 6 Router" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                 </div>
                 <div style="padding: 25px; display: flex; flex-direction: column; flex-grow: 1;">
                     <span style="color: #64748b; font-size: 0.85rem; text-transform: uppercase; font-weight: bold; margin-bottom: 5px;">Networking</span>
@@ -39,10 +37,8 @@ include_once 'includes/header.php';
             </div>
 
             <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column;">
-                <div style="background: #e2e8f0; height: 200px; display: flex; align-items: center; justify-content: center; color: #64748b;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M11 2.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m.5 4.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3M5 6.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0M5.5 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3m6 1a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m.5 4.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3"/>
-                    </svg>
+                <div style="background: #f8fafc; height: 220px; display: flex; align-items: center; justify-content: center; padding: 15px;">
+                    <img src="assets/images/D-Link 24 Port Switch.jpeg" alt="24-Port Managed Switch" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                 </div>
                 <div style="padding: 25px; display: flex; flex-direction: column; flex-grow: 1;">
                     <span style="color: #64748b; font-size: 0.85rem; text-transform: uppercase; font-weight: bold; margin-bottom: 5px;">Networking</span>
@@ -56,11 +52,8 @@ include_once 'includes/header.php';
             </div>
 
             <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column;">
-                <div style="background: #e2e8f0; height: 200px; display: flex; align-items: center; justify-content: center; color: #64748b;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/>
-                        <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1"/>
-                    </svg>
+                <div style="background: #f8fafc; height: 220px; display: flex; align-items: center; justify-content: center; padding: 15px;">
+                    <img src="assets/images/Heavy Duty Laser Printer.jpeg" alt="Heavy-Duty Laser Printer" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                 </div>
                 <div style="padding: 25px; display: flex; flex-direction: column; flex-grow: 1;">
                     <span style="color: #64748b; font-size: 0.85rem; text-transform: uppercase; font-weight: bold; margin-bottom: 5px;">Hardware</span>
@@ -73,12 +66,40 @@ include_once 'includes/header.php';
                 </div>
             </div>
 
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column;">
+                <div style="background: #f8fafc; height: 220px; display: flex; align-items: center; justify-content: center; padding: 15px;">
+                    <img src="assets/images/Toner cartridges.jpeg" alt="HP LaserJet Toner Cartridge" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                </div>
+                <div style="padding: 25px; display: flex; flex-direction: column; flex-grow: 1;">
+                    <span style="color: #ff7300; font-size: 0.85rem; text-transform: uppercase; font-weight: bold; margin-bottom: 5px;">Consumables</span>
+                    <h3 style="color: #002d62; font-size: 1.25rem; margin: 0 0 10px 0;">HP 85A Black LaserJet Toner</h3>
+                    <p style="color: #475569; font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px; flex-grow: 1;">Produces sharp black text and crisp graphics for critical business office print jobs.</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 1.4rem; font-weight: bold; color: #002d62;">Ksh 8,500</span>
+                        <button style="background: #ff7300; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column;">
+                <div style="background: #f8fafc; height: 220px; display: flex; align-items: center; justify-content: center; padding: 15px;">
+                    <img src="assets/images/cyan toner.jpeg" alt="Premium Laser Toner Cartridge" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                </div>
+                <div style="padding: 25px; display: flex; flex-direction: column; flex-grow: 1;">
+                    <span style="color: #ff7300; font-size: 0.85rem; text-transform: uppercase; font-weight: bold; margin-bottom: 5px;">Consumables</span>
+                    <h3 style="color: #002d62; font-size: 1.25rem; margin: 0 0 10px 0;">CRG-054 Premium Cyan Toner</h3>
+                    <p style="color: #475569; font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px; flex-grow: 1;">High-capacity replacement color toner cartridge optimized for high-volume laser units.</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 1.4rem; font-weight: bold; color: #002d62;">Ksh 9,200</span>
+                        <button style="background: #ff7300; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+
             <div style="background: #ffffff; border: 1px solid #002d62; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,45,98,0.1); display: flex; flex-direction: column; position: relative;">
                 <div style="position: absolute; top: 15px; right: -30px; background: #ff7300; color: white; padding: 5px 35px; transform: rotate(45deg); font-size: 0.8rem; font-weight: bold; z-index: 1;">SERVICE</div>
-                <div style="background: #f0f4f8; height: 200px; display: flex; align-items: center; justify-content: center; color: #002d62;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M.102 2.223A.5.5 0 0 0 0 2.6v1.4a.5.5 0 0 0 .5.5h.586l1.114 4.457A.5.5 0 0 0 2.685 9.3h9.63a.5.5 0 0 0 .485-.36l1.114-4.457h.586a.5.5 0 0 0 .5-.5V2.6a.5.5 0 0 0-.102-.377L14.4.223A.5.5 0 0 0 14 0H2a.5.5 0 0 0-.4.223z"/>
-                    </svg>
+                <div style="background: #f8fafc; height: 220px; display: flex; align-items: center; justify-content: center; padding: 15px;">
+                    <img src="assets/images/Technical repair.jpeg" alt="Premium Laser Toner Cartridge" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                 </div>
                 <div style="padding: 25px; display: flex; flex-direction: column; flex-grow: 1;">
                     <span style="color: #002d62; font-size: 0.85rem; text-transform: uppercase; font-weight: bold; margin-bottom: 5px;">Repairs</span>
@@ -96,10 +117,8 @@ include_once 'includes/header.php';
 
             <div style="background: #ffffff; border: 1px solid #002d62; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,45,98,0.1); display: flex; flex-direction: column; position: relative;">
                 <div style="position: absolute; top: 15px; right: -30px; background: #ff7300; color: white; padding: 5px 35px; transform: rotate(45deg); font-size: 0.8rem; font-weight: bold; z-index: 1;">PACKAGE</div>
-                <div style="background: #f0f4f8; height: 200px; display: flex; align-items: center; justify-content: center; color: #002d62;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0m.5 5a.5.5 0 0 1 1 0v3.25l2.75 1.65a.5.5 0 0 1-.5.86l-3-1.8A.5.5 0 0 1 8 8.5z"/>
-                    </svg>
+                <div style="background: #f8fafc; height: 220px; display: flex; align-items: center; justify-content: center; padding: 15px;">
+                    <img src="assets/images/Cloud Support.jpeg" alt="Premium Laser Toner Cartridge" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                 </div>
                 <div style="padding: 25px; display: flex; flex-direction: column; flex-grow: 1;">
                     <span style="color: #002d62; font-size: 0.85rem; text-transform: uppercase; font-weight: bold; margin-bottom: 5px;">Management</span>

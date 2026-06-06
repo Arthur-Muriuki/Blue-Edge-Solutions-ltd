@@ -10,12 +10,13 @@
                     <li><a href="services.php">Our Services</a></li>
                     <li><a href="shop.php">Hardware Shop</a></li>
                     <li><a href="contact.php">Support</a></li>
+                    <li><a href="usercraft.php">UserCraft</a></li>
                 </ul>
             </div>
             <div class="footer-contact">
                 <h4>Contact Us</h4>
-                <p><i class="ph ph-envelope-simple"></i> info@blueedgesolutions.co.ke</p>
-                <p><i class="ph ph-phone"></i> +254 722 942 293</p>
+                <p><i class="ph ph-envelope-simple"></i> @Blueedge-sl.com</p>
+                <p><i class="ph ph-phone"></i> +254 722 942 293/+254 733 775 544</p>
             </div>
         </div>
         <div class="footer-bottom">

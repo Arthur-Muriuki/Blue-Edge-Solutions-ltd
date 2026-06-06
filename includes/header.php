@@ -28,6 +28,7 @@
                     <li><a href="shop.php">Shop</a></li>
                     <li><a href="contact.php">Contact</a></li>
                     <li><a href="blog.php">Blog</a></li>
+                    <li><a href="usercraft.php">UserCraft</a></li>
                 </ul>
             </nav>
 
@@ -46,6 +47,7 @@
                 <li><a href="services.php">Services</a></li>
                 <li><a href="shop.php">Shop</a></li>
                 <li><a href="blog.php">Blog</a></li>
+                <li><a href="usercraft.php">UserCraft</a></li>
                 <li><a href="contact.php" class="mobile-contact-link">Get in Touch</a></li>
             </ul>
         </nav>
