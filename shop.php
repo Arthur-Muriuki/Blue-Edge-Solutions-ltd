@@ -18,7 +18,7 @@ include_once 'includes/header.php';
     <section style="background: linear-gradient(135deg, #002d62 0%, #001f42 100%); color: white; padding: 60px 20px; text-align: center;">
         <div style="max-width: 900px; margin: 0 auto;">
             <h1 style="font-size: 2.8rem; font-weight: 700; margin: 0 0 15px 0;">Products, Services & Subscriptions</h1>
-            <p style="font-size: 1.1rem; color: #cbd5e1; max-width: 600px; margin: 0 auto;">Shop hardware, book technician services, or request managed cloud support plans directly via WhatsApp.</p>
+            <p style="font-size: 1.1rem; color: #cbd5e1; max-width: 600px; margin: 0 auto;">Shop hardware, book technician services, or subscribe to managed cloud support plans.</p>
         </div>
     </section>
 
@@ -52,6 +52,7 @@ include_once 'includes/header.php';
                 <?php foreach ($products as $item): ?>
                     <?php 
                         $item_type = $item['item_type'] ?? 'product'; 
+                        $safe_title = htmlspecialchars(addslashes($item['title']));
                     ?>
                     <div class="product-card" data-category="<?php echo htmlspecialchars($item['category'] ?? ''); ?>" style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;">
                         
@@ -76,22 +77,19 @@ include_once 'includes/header.php';
                                     <?php echo ($item_type === 'subscription') ? '<small style="font-size:0.75rem; font-weight:normal; color:#64748b;">/mo</small>' : ''; ?>
                                 </span>
                                 
-                                <!-- SMART BUTTON BASED ON ITEM TYPE -->
+                                <!-- UNIFIED SMART CART BUTTONS -->
                                 <?php if ($item_type === 'subscription'): ?>
-                                    <button onclick="openServiceModal(<?php echo $item['id']; ?>, '<?php echo htmlspecialchars(addslashes($item['title'])); ?>', 'subscription')" 
+                                    <button onclick="addToCart(<?php echo $item['id']; ?>, '<?php echo $safe_title; ?>', <?php echo $item['price']; ?>, 'subscription', 1)" 
                                             style="background: #0284c7; color: white; border: none; padding: 10px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
                                         Subscribe
                                     </button>
                                 <?php elseif ($item_type === 'booking'): ?>
-                                    <button onclick="openServiceModal(<?php echo $item['id']; ?>, '<?php echo htmlspecialchars(addslashes($item['title'])); ?>', 'booking')" 
+                                    <button onclick="addToCart(<?php echo $item['id']; ?>, '<?php echo $safe_title; ?>', <?php echo $item['price']; ?>, 'booking', 1)" 
                                             style="background: #7c3aed; color: white; border: none; padding: 10px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
                                         Book Service
                                     </button>
                                 <?php else: ?>
-                                    <button class="add-to-cart-btn" 
-                                            data-id="<?php echo $item['id']; ?>" 
-                                            data-title="<?php echo htmlspecialchars($item['title']); ?>" 
-                                            data-price="<?php echo $item['price']; ?>"
+                                    <button onclick="addToCart(<?php echo $item['id']; ?>, '<?php echo $safe_title; ?>', <?php echo $item['price']; ?>, 'product', 1)" 
                                             style="background: #ff7300; color: white; border: none; padding: 10px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
                                         Add to Cart
                                     </button>
@@ -106,49 +104,12 @@ include_once 'includes/header.php';
 
 </main>
 
-<!-- SERVICE/SUBSCRIPTION MODAL -->
-<div id="serviceOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9998;" onclick="closeServiceModal()"></div>
-
-<div id="serviceModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 450px; background: white; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 9999; padding: 25px; box-sizing: border-box;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
-        <h3 id="modalTitle" style="margin: 0; color: #002d62; font-size: 1.3rem;">Request Details</h3>
-        <button onclick="closeServiceModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
-    </div>
-
-    <form id="serviceForm" onsubmit="submitServiceRequest(event)">
-        <input type="hidden" id="modalItemId">
-        <input type="hidden" id="modalItemTitle">
-        <input type="hidden" id="modalItemType">
-
-        <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #334155;">Full / Company Name *</label>
-            <input type="text" id="clientName" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
-        </div>
-
-        <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #334155;">Phone / WhatsApp Number *</label>
-            <input type="tel" id="clientPhone" placeholder="07XXXXXXXX" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
-        </div>
-
-        <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #334155;">Email Address (Optional)</label>
-            <input type="email" id="clientEmail" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
-        </div>
-
-        <div style="margin-bottom: 20px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #334155;">Additional Details / Preferred Date</label>
-            <textarea id="requestNotes" rows="3" placeholder="Tell us about your setup or preferred schedule..." style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;"></textarea>
-        </div>
-
-        <button type="submit" id="serviceSubmitBtn" style="width: 100%; background: #25D366; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer;">
-            Submit & Open WhatsApp
-        </button>
-    </form>
-</div>
+<!-- Unified Cart Engine -->
+<script src="js/carts.js"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // Search & Filter Logic
+        // Live Search & Category Filter Logic
         const searchInput = document.getElementById('shopSearch');
         const categorySelect = document.getElementById('categoryFilter');
         const productCards = document.querySelectorAll('.product-card');
@@ -182,77 +143,7 @@ include_once 'includes/header.php';
             searchInput.addEventListener('input', filterProducts);
             categorySelect.addEventListener('change', filterProducts);
         }
-
-        // Physical product Add to Cart listeners
-        document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const id = e.target.getAttribute('data-id');
-                const title = e.target.getAttribute('data-title');
-                const price = e.target.getAttribute('data-price');
-                addToCart(id, title, price);
-            });
-        });
     });
-
-    // Service Modal Functions
-    function openServiceModal(id, title, type) {
-        document.getElementById('modalItemId').value = id;
-        document.getElementById('modalItemTitle').value = title;
-        document.getElementById('modalItemType').value = type;
-        document.getElementById('modalTitle').innerText = (type === 'subscription') ? 'Subscribe: ' + title : 'Book: ' + title;
-        
-        document.getElementById('serviceModal').style.display = 'block';
-        document.getElementById('serviceOverlay').style.display = 'block';
-    }
-
-    function closeServiceModal() {
-        document.getElementById('serviceModal').style.display = 'none';
-        document.getElementById('serviceOverlay').style.display = 'none';
-        document.getElementById('serviceForm').reset();
-    }
-
-    async function submitServiceRequest(e) {
-        e.preventDefault();
-        const btn = document.getElementById('serviceSubmitBtn');
-        btn.innerText = "Processing...";
-        btn.disabled = true;
-
-        const payload = {
-            item_id: document.getElementById('modalItemId').value,
-            item_title: document.getElementById('modalItemTitle').value,
-            item_type: document.getElementById('modalItemType').value,
-            client_name: document.getElementById('clientName').value,
-            client_phone: document.getElementById('clientPhone').value,
-            client_email: document.getElementById('clientEmail').value,
-            notes: document.getElementById('requestNotes').value
-        };
-
-        try {
-            const res = await fetch('service_request.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            const data = await res.json();
-
-            if (data.success) {
-                closeServiceModal();
-                const actionText = (payload.item_type === 'subscription') ? 'subscribe to' : 'book';
-                const waText = `Hello Blue Edge Solutions, my name is ${payload.client_name}. I would like to ${actionText} "${payload.item_title}".\n\nReference Ticket:\n${data.ticket_url}`;
-                const waUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(waText)}`;
-                window.location.href = waUrl;
-            } else {
-                alert(data.error || "Error processing request.");
-            }
-        } catch (err) {
-            console.error(err);
-            alert("Connection error. Please try again.");
-        } finally {
-            btn.innerText = "Submit & Open WhatsApp";
-            btn.disabled = false;
-        }
-    }
 </script>
 
 <?php include_once 'includes/footer.php'; ?>
