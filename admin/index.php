@@ -3,12 +3,11 @@ session_start();
 
 // The Bouncer
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header("Location: login.php");
+    header("Location: admin/login.php");
     exit(); 
 }
 
-require_once 'includes/db_connect.php';
-
+require_once '../includes/db_connect.php';
 $message = '';
 
 // 1. Handle New Article Publication
