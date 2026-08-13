@@ -128,4 +128,84 @@ include_once 'includes/header.php';
     </div>
 </section>
 
+<!-- FLOATING AI CHATBOT WIDGET -->
+<div id="ai-chat-launcher" onclick="toggleChatbot()" style="position: fixed; bottom: 105px; right: 30px; background-color: #ff7300; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(255,115,0,0.4); cursor: pointer; z-index: 1000; font-size: 1.5rem;">
+    💬
+</div>
+
+<div id="ai-chat-box" style="display: none; position: fixed; bottom: 175px; right: 30px; width: 350px; max-width: 90vw; height: 480px; background: white; border-radius: 12px; box-shadow: 0 5px 25px rgba(0,0,0,0.15); border: 1px solid #e2e8f0; flex-direction: column; overflow: hidden; z-index: 1000;">
+    
+    <!-- Chat Header -->
+    <div style="background: linear-gradient(135deg, #002d62 0%, #00122e 100%); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #ff7300;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="font-size: 1.2rem;">🤖</div>
+            <div>
+                <strong style="display: block; font-size: 0.95rem;">Blue Edge AI Assistant</strong>
+                <span style="font-size: 0.75rem; color: #cbd5e1;">Online • Enterprise Support</span>
+            </div>
+        </div>
+        <button onclick="toggleChatbot()" style="background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer;">✕</button>
+    </div>
+
+    <!-- Chat Messages Window -->
+    <div id="chat-messages" style="flex: 1; padding: 15px; overflow-y: auto; background: #f8fafc; font-size: 0.9rem; line-height: 1.5;">
+        <div style="background: #e2e8f0; color: #002d62; padding: 10px 14px; border-radius: 8px; margin-bottom: 10px; max-width: 85%;">
+            Hello! I'm your Blue Edge AI assistant. How can I help you today?
+        </div>
+    </div>
+
+    <!-- Chat Input Form -->
+    <form id="chat-form" onsubmit="sendChatMessage(event)" style="display: flex; border-top: 1px solid #e2e8f0; padding: 10px; background: white;">
+        <input type="text" id="chat-input" placeholder="Ask a question..." required style="flex: 1; border: 1px solid #cbd5e1; padding: 10px; border-radius: 6px; outline: none; font-size: 0.9rem;">
+        <button type="submit" style="background: #ff7300; color: white; border: none; padding: 10px 15px; margin-left: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;">Send</button>
+    </form>
+</div>
+
+<!-- CHATBOT JAVASCRIPT LOGIC -->
+<script>
+function toggleChatbot() {
+    const chatBox = document.getElementById('ai-chat-box');
+    chatBox.style.display = (chatBox.style.display === 'none' || chatBox.style.display === '') ? 'flex' : 'none';
+}
+
+async function sendChatMessage(e) {
+    e.preventDefault();
+    const input = document.getElementById('chat-input');
+    const messages = document.getElementById('chat-messages');
+    const userMsg = input.value.trim();
+
+    if (!userMsg) return;
+
+    // Append User Message
+    const userBubble = document.createElement('div');
+    userBubble.style.cssText = 'background: #002d62; color: white; padding: 10px 14px; border-radius: 8px; margin-bottom: 10px; max-width: 85%; margin-left: auto; text-align: right;';
+    userBubble.textContent = userMsg;
+    messages.appendChild(userBubble);
+
+    input.value = '';
+    messages.scrollTop = messages.scrollHeight;
+
+    // Append Thinking Indicator
+    const botBubble = document.createElement('div');
+    botBubble.style.cssText = 'background: #e2e8f0; color: #002d62; padding: 10px 14px; border-radius: 8px; margin-bottom: 10px; max-width: 85%;';
+    botBubble.textContent = 'Thinking...';
+    messages.appendChild(botBubble);
+    messages.scrollTop = messages.scrollHeight;
+
+    try {
+        const response = await fetch('api/chat.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: userMsg })
+        });
+        const data = await response.json();
+        botBubble.textContent = data.reply || 'Sorry, something went wrong.';
+    } catch (err) {
+        botBubble.textContent = 'Unable to reach assistant. Please check your connection.';
+    }
+
+    messages.scrollTop = messages.scrollHeight;
+}
+</script>
+
 <?php include_once 'includes/footer.php'; ?>
