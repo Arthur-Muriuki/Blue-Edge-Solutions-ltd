@@ -1,6 +1,10 @@
 <?php 
 // Fallback if $base_url isn't defined on a root page
 $base = $base_url ?? ''; 
+
+// Detect if current page is usercraft.php
+$currentPage = basename($_SERVER['PHP_SELF']);
+$isUsercraft = ($currentPage === 'usercraft.php' || (isset($page_title) && strpos(strtolower($page_title), 'usercraft') !== false));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -20,8 +24,13 @@ $base = $base_url ?? '';
 
     <header class="main-header">
         <div class="container nav-container">
+            <!-- DYNAMIC BRAND LOGO (TEXT-BASED) -->
             <a href="<?php echo $base; ?>index.php" class="brand-logo">
-                Blue Edge<span>.</span>
+                <?php if ($isUsercraft): ?>
+                    UserCraft<span>.</span>
+                <?php else: ?>
+                    Blue Edge<span>.</span>
+                <?php endif; ?>
             </a>
 
             <nav class="desktop-nav">
