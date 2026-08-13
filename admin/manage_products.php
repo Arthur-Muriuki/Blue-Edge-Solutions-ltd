@@ -23,17 +23,43 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
     }
 }
 
-// 4. Handle Adding New Product
+// 4. Handle Adding New Product with Automatic Image Upload
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
     $title = trim($_POST['title']);
     $category = trim($_POST['category']);
     $price = floatval($_POST['price']);
     $price_label = !empty($_POST['price_label']) ? trim($_POST['price_label']) : NULL;
     $description = trim($_POST['description']);
-    $image = trim($_POST['image']);
     $badge = !empty($_POST['badge']) ? trim($_POST['badge']) : NULL;
+    
+    // Default image path fallback
+    $image_path = 'assets/images/placeholder.jpeg';
 
-    if (!empty($title) && !empty($category) && $price > 0) {
+    // Handle File Upload
+    if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
+        $fileTmpPath = $_FILES['product_image']['tmp_name'];
+        $fileName = $_FILES['product_image']['name'];
+        $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+
+        if (in_array($fileExtension, $allowedExtensions)) {
+            // Generate unique filename to avoid overwriting existing files
+            $newFileName = time() . '_' . preg_replace("/[^a-zA-Z0-9\._-]/", "", $fileName);
+            $uploadDir = '../assets/images/';
+            $destPath = $uploadDir . $newFileName;
+
+            if (move_uploaded_file($fileTmpPath, $destPath)) {
+                $image_path = 'assets/images/' . $newFileName;
+            } else {
+                $error = "Error moving uploaded image to assets folder.";
+            }
+        } else {
+            $error = "Invalid image file type. Allowed formats: JPG, JPEG, PNG, WEBP, GIF.";
+        }
+    }
+
+    if (empty($error) && !empty($title) && !empty($category) && $price > 0) {
         $sql = "INSERT INTO products (title, category, price, price_label, description, image, badge) 
                 VALUES (:title, :category, :price, :price_label, :description, :image, :badge)";
         $stmt = $pdo->prepare($sql);
@@ -43,14 +69,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
             'price' => $price,
             'price_label' => $price_label,
             'description' => $description,
-            'image' => $image ?: 'assets/images/placeholder.jpeg',
+            'image' => $image_path,
             'badge' => $badge
         ])) {
             $message = "New item added to inventory successfully!";
         } else {
             $error = "Failed to add product to database.";
         }
-    } else {
+    } elseif (empty($error)) {
         $error = "Please fill in all required fields (Title, Category, Price).";
     }
 }
@@ -72,7 +98,7 @@ include_once '../includes/header.php';
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
             <div>
                 <h1 style="color: #002d62; margin: 0; font-size: 2rem;">Product Inventory Manager</h1>
-                <p style="color: #64748b; margin: 5px 0 0;">Add new hardware, consumables, or service packages to your shop.</p>
+                <p style="color: #64748b; margin: 5px 0 0;">Add new hardware, consumables, or service packages directly to your shop.</p>
             </div>
             <a href="index.php" style="background: #e2e8f0; color: #002d62; text-decoration: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; font-size: 0.9rem;">
                 &larr; Back to Dashboard
@@ -94,11 +120,11 @@ include_once '../includes/header.php';
 
         <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 30px; align-items: start;">
             
-            <!-- ADD PRODUCT FORM -->
+            <!-- ADD PRODUCT FORM (WITH MULTIPART ENCTYPE) -->
             <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #e2e8f0;">
                 <h3 style="color: #002d62; margin-top: 0; margin-bottom: 20px; font-size: 1.25rem;">Add New Product</h3>
                 
-                <form method="POST" action="manage_products.php" style="display: flex; flex-direction: column; gap: 15px;">
+                <form method="POST" action="manage_products.php" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 15px;">
                     <div>
                         <label style="display: block; font-weight: bold; color: #475569; margin-bottom: 5px;">Title *</label>
                         <input type="text" name="title" required placeholder="e.g. Cisco Catalyst Switch" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
@@ -131,9 +157,10 @@ include_once '../includes/header.php';
                         <input type="text" name="badge" placeholder="e.g. SERVICE, PACKAGE, SALE" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
                     </div>
 
+                    <!-- ATTACH IMAGE FILE -->
                     <div>
-                        <label style="display: block; font-weight: bold; color: #475569; margin-bottom: 5px;">Image Relative Path</label>
-                        <input type="text" name="image" placeholder="assets/images/wifi 6 router.jpeg" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
+                        <label style="display: block; font-weight: bold; color: #475569; margin-bottom: 5px;">Attach Image File</label>
+                        <input type="file" name="product_image" accept="image/*" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; box-sizing: border-box;">
                     </div>
 
                     <div>
@@ -154,10 +181,10 @@ include_once '../includes/header.php';
                 <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem;">
                     <thead>
                         <tr style="border-bottom: 2px solid #e2e8f0; color: #64748b;">
+                            <th style="padding: 10px;">Image</th>
                             <th style="padding: 10px;">Title</th>
                             <th style="padding: 10px;">Category</th>
                             <th style="padding: 10px;">Price</th>
-                            <th style="padding: 10px;">Badge</th>
                             <th style="padding: 10px; text-align: right;">Action</th>
                         </tr>
                     </thead>
@@ -165,6 +192,9 @@ include_once '../includes/header.php';
                         <?php if (!empty($products)): ?>
                             <?php foreach ($products as $p): ?>
                                 <tr style="border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 10px;">
+                                        <img src="../<?php echo htmlspecialchars($p['image']); ?>" alt="thumb" style="width: 45px; height: 45px; object-fit: contain; border-radius: 4px; background: #f8fafc; border: 1px solid #e2e8f0;">
+                                    </td>
                                     <td style="padding: 12px 10px; font-weight: bold; color: #002d62;">
                                         <?php echo htmlspecialchars($p['title']); ?>
                                     </td>
@@ -173,15 +203,6 @@ include_once '../includes/header.php';
                                     </td>
                                     <td style="padding: 12px 10px; color: #166534; font-weight: bold;">
                                         Ksh <?php echo number_format($p['price'], 0); ?>
-                                    </td>
-                                    <td style="padding: 12px 10px;">
-                                        <?php if (!empty($p['badge'])): ?>
-                                            <span style="background: #ff7300; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">
-                                                <?php echo htmlspecialchars($p['badge']); ?>
-                                            </span>
-                                        <?php else: ?>
-                                            <span style="color: #cbd5e1;">—</span>
-                                        <?php endif; ?>
                                     </td>
                                     <td style="padding: 12px 10px; text-align: right;">
                                         <a href="manage_products.php?action=delete&id=<?php echo $p['id']; ?>" 
