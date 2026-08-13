@@ -22,7 +22,7 @@ include_once '../includes/header.php';
         <!-- Welcome Hero Box -->
         <div style="background: linear-gradient(135deg, #002d62 0%, #001f42 100%); color: white; padding: 35px 30px; border-radius: 12px; margin-bottom: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
             <div>
-                <h1 style="margin: 0 0 10px 0; font-size: 2rem;">Welcome back, <?php echo htmlspecialchars($_SESSION['admin_username'] ?? 'Admin'); ?>! 👋</h1>
+                <h1 style="margin: 0 0 10px 0; font-size: 2rem;">Welcome back, <?php echo htmlspecialchars($_SESSION['admin_username'] ?? 'Admin'); ?>! </h1>
                 <p style="margin: 0; color: #cbd5e1; font-size: 1.05rem;">Select a tool below to manage your website hardware shop or editorial content.</p>
             </div>
             <a href="logout.php" style="background: rgba(255,255,255,0.15); color: white; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; border: 1px solid rgba(255,255,255,0.3); transition: background 0.2s;">
@@ -60,8 +60,8 @@ include_once '../includes/header.php';
                         Write, edit, and publish new technical blog posts and industry insights for Blue Edge clients.
                     </p>
                 </div>
-                <a href="edit_article.php" style="background: #002d62; color: white; text-align: center; text-decoration: none; padding: 12px; border-radius: 6px; font-weight: bold; display: block;">
-                    Write / Edit Articles &rarr;
+               <a href="manage_articles.php" style="background: #002d62; color: white; text-align: center; text-decoration: none; padding: 12px; border-radius: 6px; font-weight: bold; display: block;">
+                Manage Articles &rarr;
                 </a>
             </div>
 
