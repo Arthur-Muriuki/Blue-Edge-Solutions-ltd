@@ -15,6 +15,7 @@ $base = $base_url ?? '';
                 <li><a href="<?php echo $base; ?>shop.php">Hardware Shop</a></li>
                 <li><a href="<?php echo $base; ?>contact.php">Support</a></li>
                 <li><a href="<?php echo $base; ?>usercraft.php">UserCraft</a></li>
+                <li><a href="<?php echo $base; ?>help.php">Help Center</a></li>
                 <li><a href="<?php echo $base; ?>admin/login.php">Staff Access</a></li>
             </ul>
         </div>

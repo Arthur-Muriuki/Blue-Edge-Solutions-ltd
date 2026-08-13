@@ -33,6 +33,7 @@ $base = $base_url ?? '';
                     <li><a href="<?php echo $base; ?>contact.php">Contact</a></li>
                     <li><a href="<?php echo $base; ?>blog.php">Blog</a></li>
                     <li><a href="<?php echo $base; ?>usercraft.php">UserCraft</a></li>
+                    <li><a href="<?php echo $base; ?>help.php">Help Center</a></li>
                 </ul>
             </nav>
 
