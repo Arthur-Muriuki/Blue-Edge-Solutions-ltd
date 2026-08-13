@@ -168,6 +168,16 @@ function toggleChatbot() {
     chatBox.style.display = (chatBox.style.display === 'none' || chatBox.style.display === '') ? 'flex' : 'none';
 }
 
+// Format raw Markdown into styled HTML
+function formatMarkdown(text) {
+    if (!text) return '';
+    return text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // Bold **text**
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')               // Italic *text*
+        .replace(/^(?:\*|-)\s+(.*)$/gm, '• $1')             // Bullet points (- or *)
+        .replace(/\n/g, '<br>');                            // Line breaks
+}
+
 async function sendChatMessage(e) {
     e.preventDefault();
     const input = document.getElementById('chat-input');
@@ -187,7 +197,7 @@ async function sendChatMessage(e) {
 
     // Append Thinking Indicator
     const botBubble = document.createElement('div');
-    botBubble.style.cssText = 'background: #e2e8f0; color: #002d62; padding: 10px 14px; border-radius: 8px; margin-bottom: 10px; max-width: 85%;';
+    botBubble.style.cssText = 'background: #e2e8f0; color: #002d62; padding: 10px 14px; border-radius: 8px; margin-bottom: 10px; max-width: 85%; line-height: 1.5;';
     botBubble.textContent = 'Thinking...';
     messages.appendChild(botBubble);
     messages.scrollTop = messages.scrollHeight;
@@ -199,7 +209,9 @@ async function sendChatMessage(e) {
             body: JSON.stringify({ message: userMsg })
         });
         const data = await response.json();
-        botBubble.textContent = data.reply || 'Sorry, something went wrong.';
+        
+        // Render formatted Markdown HTML cleanly
+        botBubble.innerHTML = formatMarkdown(data.reply || 'Sorry, something went wrong.');
     } catch (err) {
         botBubble.textContent = 'Unable to reach assistant. Please check your connection.';
     }
