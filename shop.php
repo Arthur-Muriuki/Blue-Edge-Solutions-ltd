@@ -22,7 +22,7 @@ include_once 'includes/header.php';
         <div style="max-width: 900px; margin: 0 auto;">
             <h1 style="font-size: 2.8rem; font-weight: 700; color:#e2e8f0; margin: 10px 0 15px 0;">Hardware & Service Shop</h1>
             <p style="font-size: 1.1rem; color: #cbd5e1; max-width: 600px; margin: 0 auto;">
-                Upgrade your infrastructure with enterprise-grade networking equipment, premium consumables, or book our specialized IT service packages directly.
+                Upgrade your infrastructure with enterprise-grade networking equipment, premium consumables, or book our specialized IT service packages directly via WhatsApp.
             </p>
         </div>
     </section>
@@ -64,6 +64,21 @@ include_once 'includes/header.php';
 
             <?php if (!empty($products)): ?>
                 <?php foreach ($products as $item): ?>
+                    
+                    <?php 
+                        // DYNAMIC WHATSAPP LINK GENERATION
+                        $whatsapp_number = "254722942293"; // Replace with your official business phone number
+                        
+                        $intent = ($item['badge'] === 'SERVICE') ? "book" : (($item['badge'] === 'PACKAGE') ? "subscribe to" : "order");
+                        $wa_text = "Hello Blue Edge Solutions, I would like to " . $intent . " the following item from your website:\n\n"
+                                 . "*Item:* " . $item['title'] . "\n"
+                                 . "*Category:* " . $item['category'] . "\n"
+                                 . "*Price:* Ksh " . number_format($item['price'], 0) . ($item['price_label'] ? " (" . $item['price_label'] . ")" : "") . "\n\n"
+                                 . "Please advise on availability and next steps.";
+
+                        $whatsapp_url = "https://wa.me/" . $whatsapp_number . "?text=" . urlencode($wa_text);
+                    ?>
+
                     <div class="product-card" data-category="<?php echo htmlspecialchars($item['category']); ?>" style="background: #ffffff; border: 1px solid <?php echo !empty($item['badge']) ? '#002d62' : '#e2e8f0'; ?>; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; position: relative;">
                         
                         <!-- Dynamic Badge (SERVICE / PACKAGE / SALE) -->
@@ -90,7 +105,7 @@ include_once 'includes/header.php';
                                 <?php echo htmlspecialchars($item['description']); ?>
                             </p>
 
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
                                 <div style="display: flex; flex-direction: column;">
                                     <?php if (!empty($item['price_label'])): ?>
                                         <span style="font-size: 0.8rem; color: #64748b;"><?php echo htmlspecialchars($item['price_label']); ?></span>
@@ -100,17 +115,18 @@ include_once 'includes/header.php';
                                     </span>
                                 </div>
 
-                                <button style="background: <?php echo !empty($item['badge']) ? '#002d62' : '#ff7300'; ?>; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">
+                                <!-- WHATSAPP DYNAMIC ACTION LINK -->
+                                <a href="<?php echo $whatsapp_url; ?>" target="_blank" rel="noopener noreferrer" style="background: <?php echo !empty($item['badge']) ? '#002d62' : '#ff7300'; ?>; color: white; text-decoration: none; padding: 10px 18px; border-radius: 4px; font-weight: bold; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px; transition: opacity 0.2s;">
                                     <?php 
                                         if ($item['badge'] === 'SERVICE') {
-                                            echo 'Book Now';
+                                            echo 'Book via WhatsApp';
                                         } elseif ($item['badge'] === 'PACKAGE') {
                                             echo 'Subscribe';
                                         } else {
-                                            echo 'Add to Cart';
+                                            echo 'Order on WhatsApp';
                                         }
                                     ?>
-                                </button>
+                                </a>
                             </div>
                         </div>
                     </div>
