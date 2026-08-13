@@ -41,6 +41,7 @@ $article = $stmt->fetch();
 
 if (!$article) { echo "Article not found."; exit(); }
 
+$base_url = '../';
 $page_title = "Edit Article | Blue Edge Solutions";
 include_once '../includes/header.php';
 ?>
