@@ -67,7 +67,6 @@ try {
     $orders = $stmt_orders->fetchAll(PDO::FETCH_ASSOC);
 
     foreach ($orders as $o) {
-        // Fetch ordered items description
         $item_descriptions = [];
         try {
             $stmt_items = $pdo->prepare("SELECT * FROM order_items WHERE order_id = :order_id");
@@ -109,7 +108,35 @@ usort($all_records, function($a, $b) {
     return strtotime($b['created_at']) - strtotime($a['created_at']);
 });
 
-$page_title = "Manage All Orders & Subscriptions | Admin";
+// Calculate record counts for each category badge
+$counts = [
+    'all'          => count($all_records),
+    'hardware'     => 0,
+    'subscription' => 0,
+    'booking'      => 0
+];
+
+foreach ($all_records as $rec) {
+    $type = $rec['item_type'] ?? 'booking';
+    if (isset($counts[$type])) {
+        $counts[$type]++;
+    }
+}
+
+// Active Filter Tab Handling
+$active_tab = $_GET['tab'] ?? 'all';
+if (!in_array($active_tab, ['all', 'hardware', 'subscription', 'booking'], true)) {
+    $active_tab = 'all';
+}
+
+// Filter records array according to active tab
+if ($active_tab !== 'all') {
+    $all_records = array_filter($all_records, function($item) use ($active_tab) {
+        return $item['item_type'] === $active_tab;
+    });
+}
+
+$page_title = "Manage Orders, Subscriptions & Bookings | Admin";
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -128,6 +155,14 @@ $page_title = "Manage All Orders & Subscriptions | Admin";
         .alert { padding: 12px 20px; border-radius: 6px; margin-bottom: 20px; font-weight: 600; }
         .alert-success { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
         .alert-error { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+
+        /* Navigation Filter Tabs */
+        .filter-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 6px; background: white; color: #475569; text-decoration: none; font-weight: 600; font-size: 0.9rem; border: 1px solid #cbd5e1; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .tab-btn:hover { background: #f8fafc; color: #002d62; border-color: #94a3b8; }
+        .tab-btn.active { background: #002d62; color: white; border-color: #002d62; }
+        .tab-count { background: #e2e8f0; color: #334155; font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; font-weight: bold; }
+        .tab-btn.active .tab-count { background: rgba(255, 255, 255, 0.25); color: white; }
 
         .table-card { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; text-align: left; min-width: 900px; }
@@ -166,6 +201,22 @@ $page_title = "Manage All Orders & Subscriptions | Admin";
             <?php echo htmlspecialchars($message); ?>
         </div>
     <?php endif; ?>
+
+    <!-- Category Filter Tabs -->
+    <div class="filter-tabs">
+        <a href="?tab=all" class="tab-btn <?php echo $active_tab === 'all' ? 'active' : ''; ?>">
+            All Activity <span class="tab-count"><?php echo $counts['all']; ?></span>
+        </a>
+        <a href="?tab=hardware" class="tab-btn <?php echo $active_tab === 'hardware' ? 'active' : ''; ?>">
+            📦 Hardware Orders <span class="tab-count"><?php echo $counts['hardware']; ?></span>
+        </a>
+        <a href="?tab=subscription" class="tab-btn <?php echo $active_tab === 'subscription' ? 'active' : ''; ?>">
+            🔄 Subscriptions <span class="tab-count"><?php echo $counts['subscription']; ?></span>
+        </a>
+        <a href="?tab=booking" class="tab-btn <?php echo $active_tab === 'booking' ? 'active' : ''; ?>">
+            🛠️ Service Bookings <span class="tab-count"><?php echo $counts['booking']; ?></span>
+        </a>
+    </div>
 
     <div class="table-card">
         <table>
@@ -260,7 +311,7 @@ $page_title = "Manage All Orders & Subscriptions | Admin";
                 <?php else: ?>
                     <tr>
                         <td colspan="9" style="text-align: center; padding: 40px; color: #64748b;">
-                            No orders, bookings, or subscription requests found yet.
+                            No records found under this view category.
                         </td>
                     </tr>
                 <?php endif; ?>
