@@ -15,7 +15,7 @@ include_once 'includes/header.php';
             
             <h1 style="font-size: 2.5rem; font-weight: 700; color: #f8fafc; margin: 0 0 10px 0; width: 100%;">Welcome to UserCraft Consult</h1>
             <p style="font-size: 1.35rem; font-weight: 600; color: #ff7300; line-height: 1.6; max-width: 650px; margin: 0 auto;">
-                ICT Support & Systems Integration
+                As a proud affiliate of Blue Edge, UserCraft specializes in delivering responsive IT support and end-to-end systems integration—keeping your business connected, secure, and running without interruption.
             </p>
         </div>
     </header>
