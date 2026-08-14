@@ -17,6 +17,7 @@ $base = $base_url ?? '';
                 <li><a href="<?php echo $base; ?>usercraft.php">UserCraft</a></li>
                 <li><a href="<?php echo $base; ?>help.php">Help Center</a></li>
                 <li><a href="<?php echo $base; ?>admin/login.php">Staff Access</a></li>
+                <a href="<?php echo $base_url ?? ''; ?>privacy-policy.php" style="color: #cbd5e1; text-decoration: none;">Privacy Policy</a>
             </ul>
         </div>
         <div class="footer-contact">
@@ -212,5 +213,25 @@ $base = $base_url ?? '';
         renderCart();
     });
 </script>
+<!-- Cookie Consent Banner -->
+<?php if (!isset($_COOKIE['cookie_consent'])): ?>
+<div id="cookie-banner" style="position: fixed; bottom: 0; left: 0; right: 0; background: #002d62; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 9999; box-shadow: 0 -2px 10px rgba(0,0,0,0.2); font-size: 0.9rem;">
+    <div>
+        We use essential cookies to maintain your shopping cart and order tracking. Read our <a href="<?php echo $base_url ?? ''; ?>privacy-policy.php" style="color: #ff7300; font-weight: bold; text-decoration: underline;">Privacy Policy</a>.
+    </div>
+    <button onclick="acceptCookies()" style="background: #ff7300; color: white; border: none; padding: 8px 18px; border-radius: 4px; font-weight: bold; cursor: pointer; margin-left: 15px;">
+        Got it!
+    </button>
+</div>
+
+<script>
+function acceptCookies() {
+    let d = new Date();
+    d.setTime(d.getTime() + (365 * 24 * 60 * 60 * 1000)); // 1 Year
+    document.cookie = "cookie_consent=true; expires=" + d.toUTCString() + "; path=/; SameSite=Lax";
+    document.getElementById('cookie-banner').style.display = 'none';
+}
+</script>
+<?php endif; ?>
 </body>
 </html>

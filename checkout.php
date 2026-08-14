@@ -6,6 +6,11 @@ ini_set('display_errors', 0);
 
 require_once 'includes/db_connect.php';
 
+// Start session if not already active to synchronize cart state
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 // 1. Read incoming JSON payload
 $json = file_get_contents('php://input');
 $data = json_decode($json, true);
@@ -122,6 +127,24 @@ try {
     }
 
     $pdo->commit();
+
+    // ----------------------------------------------------
+    // COOKIE INTEGRATION FOR GUEST CUSTOMERS
+    // ----------------------------------------------------
+    // A. Remember this ticket reference code in a cookie for 90 days
+    setcookie('last_ticket_ref', $reference_code, [
+        'expires'  => time() + (86400 * 90),
+        'path'     => '/',
+        'samesite' => 'Lax'
+    ]);
+
+    // B. Clear the saved guest cart cookie since order is placed successfully
+    setcookie('saved_guest_cart', '', [
+        'expires'  => time() - 3600,
+        'path'     => '/',
+        'samesite' => 'Lax'
+    ]);
+    unset($_SESSION['cart']);
 
     // 7. Dynamically construct complete ticket URL
     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
