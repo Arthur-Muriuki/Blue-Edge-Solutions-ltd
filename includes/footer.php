@@ -39,37 +39,46 @@
     <!-- FLOATING BOTTOM-LEFT COOKIE CONSENT BANNER -->
     <!-- ========================================== -->
     <?php if (!isset($_COOKIE['cookie_consent'])): ?>
-    <div id="cookieConsentBanner" style="position: fixed; bottom: 20px; left: 20px; max-width: 380px; width: calc(100% - 40px); background: #ffffff; color: #0f172a; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.18); border: 1px solid #e2e8f0; padding: 20px; z-index: 99999; transition: all 0.3s ease;">
-        <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px;">
+    <div id="cookieConsentBanner" style="position: fixed; bottom: 20px; left: 20px; max-width: 400px; width: calc(100% - 40px); background: #ffffff; color: #0f172a; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.18); border: 1px solid #e2e8f0; padding: 20px; z-index: 99999; transition: all 0.3s ease;">
+        <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px;">
             <span style="font-size: 1.5rem; line-height: 1;">🍪</span>
             <div>
                 <h4 style="margin: 0 0 4px 0; color: #002d62; font-size: 1rem;">We Value Your Privacy</h4>
                 <p style="margin: 0; font-size: 0.85rem; color: #475569; line-height: 1.4;">
-                    We use essential cookies to remember your device, keep your shopping cart active, and save ticket lookups. Read our <a href="<?php echo $base ?? ''; ?>privacy-policy.php" style="color: #ff7300; font-weight: bold; text-decoration: underline;">Privacy Policy</a>.
+                    We use cookies to save cart items, remember device preferences, and look up tickets. Read our <a href="<?php echo $base ?? ''; ?>privacy-policy.php" style="color: #ff7300; font-weight: bold; text-decoration: underline;">Privacy Policy</a>.
                 </p>
             </div>
         </div>
-        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <div style="display: flex; gap: 10px; justify-content: flex-end; align-items: center;">
+            <button onclick="declineCookies()" style="background: transparent; color: #64748b; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;">
+                Decline
+            </button>
             <button onclick="acceptCookies()" style="background: #002d62; color: #ffffff; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; cursor: pointer; transition: background 0.2s;">
-                Accept & Close
+                Accept All
             </button>
         </div>
     </div>
 
     <script>
-    function acceptCookies() {
-        // Set cookie consent for 365 days
+    function setConsentCookie(status) {
         const date = new Date();
         date.setTime(date.getTime() + (365 * 24 * 60 * 60 * 1000));
-        document.cookie = "cookie_consent=accepted; expires=" + date.toUTCString() + "; path=/; SameSite=Lax";
+        document.cookie = "cookie_consent=" + status + "; expires=" + date.toUTCString() + "; path=/; SameSite=Lax";
         
-        // Hide the banner with a smooth fade-out effect
         const banner = document.getElementById('cookieConsentBanner');
         if (banner) {
             banner.style.opacity = '0';
             banner.style.transform = 'translateY(10px)';
             setTimeout(() => banner.style.display = 'none', 300);
         }
+    }
+
+    function acceptCookies() {
+        setConsentCookie('accepted');
+    }
+
+    function declineCookies() {
+        setConsentCookie('declined');
     }
     </script>
     <?php endif; ?>
