@@ -124,7 +124,7 @@ $isUsercraft = ($currentPage === 'usercraft.php' || (isset($page_title) && strpo
             <!-- 1. FAR LEFT: BRAND LOGO -->
             <?php if ($isUsercraft): ?>
                 <a href="<?php echo $base; ?>index.php" style="display: flex; align-items: center; text-decoration: none; flex-shrink: 0;">
-                    <img src="<?php echo $base; ?>assets/images/UserCraft.png" alt="UserCraft Consult" style="height: 50px; width: auto; object-fit: contain; display: block;">
+                    <img src="<?php echo $base; ?>assets/images/UserCraft.png" alt="UserCraft Consult" style="height: 100px; width: auto; object-fit: contain; display: block;">
                 </a>
             <?php else: ?>
                 <a href="<?php echo $base; ?>index.php" class="brand-logo">
