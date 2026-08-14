@@ -1,4 +1,16 @@
 .DS_Store
 Thumbs.db
 /includes/db_connect.php
+config.php
 *.log
+*.sql
+# Ignore database configuration containing passwords (if applicable)
+# includes/db_connect.php
+
+# Ignore OS metadata files
+.DS_Store
+Thumbs.db
+
+# Ignore local upload directories/logs if needed
+uploads/*
+!uploads/.gitkeep

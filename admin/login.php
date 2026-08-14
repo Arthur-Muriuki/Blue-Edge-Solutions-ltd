@@ -1,7 +1,9 @@
 <?php
 // START THE SESSION: This is required to hand out the "VIP Pass"
 session_start();
-require_once 'includes/db_connect.php';
+
+// Updated path to go up one level to reach includes/
+require_once '../includes/db_connect.php';
 
 $error = '';
 
@@ -22,16 +24,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $_SESSION['admin_logged_in'] = true;
         $_SESSION['admin_username'] = $admin['username'];
         
-        // Redirect them to the vault
-        header("Location: admin.php");
+        // Redirect them to the admin dashboard (index.php inside /admin)
+        header("Location: index.php");
         exit();
     } else {
         $error = "Invalid username or password.";
     }
 }
-
+$base_url = '../';
 $page_title = "Admin Login | Blue Edge Solutions";
-include_once 'includes/header.php';
+include_once '../includes/header.php';
 ?>
 
 <main style="background-color: #f8fafc; min-height: 70vh; display: flex; align-items: center; justify-content: center;">
@@ -60,4 +62,4 @@ include_once 'includes/header.php';
     </div>
 </main>
 
-<?php include_once 'includes/footer.php'; ?>
+<?php include_once '../includes/footer.php'; ?>
