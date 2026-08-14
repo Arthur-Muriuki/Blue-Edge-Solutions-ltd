@@ -91,9 +91,6 @@ $isUsercraft = ($currentPage === 'usercraft.php' || (isset($page_title) && strpo
                 align-items: center;
                 justify-content: center;
             }
-            .usercraft-contact-info {
-                display: none !important;
-            }
         }
 
         <?php if ($isUsercraft): ?>
@@ -155,18 +152,8 @@ $isUsercraft = ($currentPage === 'usercraft.php' || (isset($page_title) && strpo
                     (<span id="cartCount">0</span>)
                 </button>
 
-                <!-- CONTACT DETAILS / CTA -->
-                <?php if ($isUsercraft): ?>
-                    <div class="usercraft-contact-info" style="display: flex; flex-direction: column; font-size: 0.78rem; color: #cbd5e1; line-height: 1.35; text-align: right;">
-                        <strong style="font-size: 0.95rem; color: #ffffff;">UserCraft Consult</strong>
-                        <span>P.O Box 4119-00100 Nairobi</span>
-                        <span>Caxton House 1st Floor, Kenyatta Ave</span>
-                        <span>Email: usercraft@gmail.com</span>
-                        <span>Phone: 0722-146-546</span>
-                    </div>
-                <?php else: ?>
-                    <a href="<?php echo $base; ?>contact.php" class="btn btn-primary">Get in Touch</a>
-                <?php endif; ?>
+                <!-- GET IN TOUCH BUTTON -->
+                <a href="<?php echo $base; ?>contact.php" class="btn btn-primary">Get in Touch</a>
 
                 <!-- HAMBURGER BUTTON -->
                 <button class="mobile-menu-btn" aria-label="Open Menu" onclick="toggleMobileMenu()">
