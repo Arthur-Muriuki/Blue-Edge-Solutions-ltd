@@ -1,6 +1,14 @@
 <?php
 require_once 'includes/db_connect.php';
 
+// 1. Auto-patch 'products' table to ensure 'stock' column exists
+try {
+    $pdo->exec("ALTER TABLE products ADD COLUMN stock INT NOT NULL DEFAULT 10");
+} catch (PDOException $e) {
+    // Ignored if column already exists
+}
+
+// 2. Fetch products
 try {
     $stmt = $pdo->query("SELECT * FROM products ORDER BY id DESC");
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -51,19 +59,23 @@ include_once 'includes/header.php';
             <?php if (!empty($products)): ?>
                 <?php foreach ($products as $item): ?>
                     <?php 
-                        $item_type = $item['item_type'] ?? 'product'; 
+                        $item_type  = $item['item_type'] ?? 'product'; 
                         $safe_title = htmlspecialchars(addslashes($item['title']));
+                        $stock      = isset($item['stock']) ? intval($item['stock']) : 0;
+                        $is_out_of_stock = ($item_type === 'product' && $stock <= 0);
                     ?>
                     <div class="product-card" data-category="<?php echo htmlspecialchars($item['category'] ?? ''); ?>" style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;">
                         
                         <div style="background: #f8fafc; height: 220px; padding: 15px; display: flex; align-items: center; justify-content: center; position: relative;">
-                            <img src="<?php echo htmlspecialchars($item['image']); ?>" alt="<?php echo htmlspecialchars($item['title']); ?>" style="max-height: 100%; object-fit: contain;">
+                            <img src="<?php echo htmlspecialchars($item['image']); ?>" alt="<?php echo htmlspecialchars($item['title']); ?>" style="max-height: 100%; object-fit: contain; <?php echo $is_out_of_stock ? 'filter: grayscale(80%); opacity: 0.6;' : ''; ?>">
                             
-                            <!-- TYPE BADGE -->
+                            <!-- TYPE & STOCK BADGES -->
                             <?php if ($item_type === 'subscription'): ?>
                                 <span style="position: absolute; top: 12px; right: 12px; background: #0284c7; color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Monthly Plan</span>
                             <?php elseif ($item_type === 'booking'): ?>
                                 <span style="position: absolute; top: 12px; right: 12px; background: #7c3aed; color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Service</span>
+                            <?php elseif ($is_out_of_stock): ?>
+                                <span style="position: absolute; top: 12px; right: 12px; background: #dc2626; color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Out of Stock</span>
                             <?php endif; ?>
                         </div>
 
@@ -72,10 +84,19 @@ include_once 'includes/header.php';
                             <p style="color: #475569; font-size: 0.9rem; flex-grow: 1; margin-bottom: 20px;"><?php echo htmlspecialchars($item['description']); ?></p>
                             
                             <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-                                <span style="font-size: 1.2rem; font-weight: bold; color: #002d62;">
-                                    Ksh <?php echo number_format($item['price'], 0); ?>
-                                    <?php echo ($item_type === 'subscription') ? '<small style="font-size:0.75rem; font-weight:normal; color:#64748b;">/mo</small>' : ''; ?>
-                                </span>
+                                <div>
+                                    <span style="font-size: 1.2rem; font-weight: bold; color: #002d62;">
+                                        Ksh <?php echo number_format($item['price'], 0); ?>
+                                        <?php echo ($item_type === 'subscription') ? '<small style="font-size:0.75rem; font-weight:normal; color:#64748b;">/mo</small>' : ''; ?>
+                                    </span>
+                                    
+                                    <!-- STOCK QUANTITY DISPLAY -->
+                                    <?php if ($item_type === 'product'): ?>
+                                        <div style="font-size: 0.8rem; margin-top: 3px; font-weight: 600; color: <?php echo $stock > 0 ? '#16a34a' : '#dc2626'; ?>;">
+                                            <?php echo $stock > 0 ? "In Stock ({$stock} left)" : "Out of Stock"; ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
                                 
                                 <!-- UNIFIED SMART CART BUTTONS -->
                                 <?php if ($item_type === 'subscription'): ?>
@@ -87,6 +108,11 @@ include_once 'includes/header.php';
                                     <button onclick="addToCart(<?php echo $item['id']; ?>, '<?php echo $safe_title; ?>', <?php echo $item['price']; ?>, 'booking', 1)" 
                                             style="background: #7c3aed; color: white; border: none; padding: 10px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
                                         Book Service
+                                    </button>
+                                <?php elseif ($is_out_of_stock): ?>
+                                    <button disabled 
+                                            style="background: #94a3b8; color: white; border: none; padding: 10px 14px; border-radius: 4px; font-weight: bold; cursor: not-allowed; opacity: 0.7;">
+                                        Out of Stock
                                     </button>
                                 <?php else: ?>
                                     <button onclick="addToCart(<?php echo $item['id']; ?>, '<?php echo $safe_title; ?>', <?php echo $item['price']; ?>, 'product', 1)" 

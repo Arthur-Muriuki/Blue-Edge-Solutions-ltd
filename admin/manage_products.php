@@ -12,6 +12,13 @@ require_once '../includes/db_connect.php';
 $message = '';
 $error = '';
 
+// Auto-patch 'products' table to ensure 'stock' column exists
+try {
+    $pdo->exec("ALTER TABLE products ADD COLUMN stock INT NOT NULL DEFAULT 10");
+} catch (PDOException $e) {
+    // Ignored if column already exists
+}
+
 // 3. Handle Product Deletion
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
     $id = intval($_GET['id']);
@@ -23,22 +30,36 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
     }
 }
 
-// 4. Handle Adding New Product with Automatic Image Upload
+// 4. Handle Quick Inline Stock Updates
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_stock'])) {
+    $product_id = intval($_POST['product_id']);
+    $new_stock  = max(0, intval($_POST['stock_qty']));
+
+    $stmt = $pdo->prepare("UPDATE products SET stock = :stock WHERE id = :id");
+    if ($stmt->execute(['stock' => $new_stock, 'id' => $product_id])) {
+        $message = "Stock level updated successfully!";
+    } else {
+        $error = "Failed to update stock level.";
+    }
+}
+
+// 5. Handle Adding New Product with Automatic Image Upload & Stock Level
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
-    $title = trim($_POST['title']);
-    $category = trim($_POST['category']);
-    $price = floatval($_POST['price']);
+    $title       = trim($_POST['title']);
+    $category    = trim($_POST['category']);
+    $price       = floatval($_POST['price']);
     $price_label = !empty($_POST['price_label']) ? trim($_POST['price_label']) : NULL;
     $description = trim($_POST['description']);
-    $badge = !empty($_POST['badge']) ? trim($_POST['badge']) : NULL;
+    $badge       = !empty($_POST['badge']) ? trim($_POST['badge']) : NULL;
+    $stock       = isset($_POST['stock']) ? max(0, intval($_POST['stock'])) : 10;
     
     // Default image path fallback
     $image_path = 'assets/images/placeholder.jpeg';
 
     // Handle File Upload
     if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
-        $fileTmpPath = $_FILES['product_image']['tmp_name'];
-        $fileName = $_FILES['product_image']['name'];
+        $fileTmpPath   = $_FILES['product_image']['tmp_name'];
+        $fileName      = $_FILES['product_image']['name'];
         $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
         $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
@@ -46,8 +67,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
         if (in_array($fileExtension, $allowedExtensions)) {
             // Generate unique filename to avoid overwriting existing files
             $newFileName = time() . '_' . preg_replace("/[^a-zA-Z0-9\._-]/", "", $fileName);
-            $uploadDir = '../assets/images/';
-            $destPath = $uploadDir . $newFileName;
+            $uploadDir   = '../assets/images/';
+            $destPath    = $uploadDir . $newFileName;
 
             if (move_uploaded_file($fileTmpPath, $destPath)) {
                 $image_path = 'assets/images/' . $newFileName;
@@ -60,17 +81,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
     }
 
     if (empty($error) && !empty($title) && !empty($category) && $price > 0) {
-        $sql = "INSERT INTO products (title, category, price, price_label, description, image, badge) 
-                VALUES (:title, :category, :price, :price_label, :description, :image, :badge)";
+        $sql = "INSERT INTO products (title, category, price, price_label, description, image, badge, stock) 
+                VALUES (:title, :category, :price, :price_label, :description, :image, :badge, :stock)";
         $stmt = $pdo->prepare($sql);
         if ($stmt->execute([
-            'title' => $title,
-            'category' => $category,
-            'price' => $price,
+            'title'       => $title,
+            'category'    => $category,
+            'price'       => $price,
             'price_label' => $price_label,
             'description' => $description,
-            'image' => $image_path,
-            'badge' => $badge
+            'image'       => $image_path,
+            'badge'       => $badge,
+            'stock'       => $stock
         ])) {
             $message = "New item added to inventory successfully!";
         } else {
@@ -81,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
     }
 }
 
-// 5. Fetch all products
+// 6. Fetch all products
 $stmt = $pdo->query("SELECT * FROM products ORDER BY id DESC");
 $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -120,7 +142,7 @@ include_once '../includes/header.php';
 
         <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 30px; align-items: start;">
             
-            <!-- ADD PRODUCT FORM (WITH MULTIPART ENCTYPE) -->
+            <!-- ADD PRODUCT FORM -->
             <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #e2e8f0;">
                 <h3 style="color: #002d62; margin-top: 0; margin-bottom: 20px; font-size: 1.25rem;">Add New Product</h3>
                 
@@ -147,14 +169,20 @@ include_once '../includes/header.php';
                             <input type="number" step="0.01" name="price" required placeholder="25000" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
                         </div>
                         <div style="flex: 1;">
-                            <label style="display: block; font-weight: bold; color: #475569; margin-bottom: 5px;">Price Label</label>
-                            <input type="text" name="price_label" placeholder="e.g. Per Month" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
+                            <label style="display: block; font-weight: bold; color: #475569; margin-bottom: 5px;">Stock Quantity *</label>
+                            <input type="number" name="stock" required value="10" min="0" placeholder="10" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
                         </div>
                     </div>
 
-                    <div>
-                        <label style="display: block; font-weight: bold; color: #475569; margin-bottom: 5px;">Badge Ribbon</label>
-                        <input type="text" name="badge" placeholder="e.g. SERVICE, PACKAGE, SALE" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
+                    <div style="display: flex; gap: 10px;">
+                        <div style="flex: 1;">
+                            <label style="display: block; font-weight: bold; color: #475569; margin-bottom: 5px;">Price Label</label>
+                            <input type="text" name="price_label" placeholder="e.g. Per Month" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="display: block; font-weight: bold; color: #475569; margin-bottom: 5px;">Badge Ribbon</label>
+                            <input type="text" name="badge" placeholder="e.g. SERVICE, PACKAGE" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
+                        </div>
                     </div>
 
                     <!-- ATTACH IMAGE FILE -->
@@ -185,12 +213,15 @@ include_once '../includes/header.php';
                             <th style="padding: 10px;">Title</th>
                             <th style="padding: 10px;">Category</th>
                             <th style="padding: 10px;">Price</th>
+                            <th style="padding: 10px;">Stock</th>
                             <th style="padding: 10px; text-align: right;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (!empty($products)): ?>
-                            <?php foreach ($products as $p): ?>
+                            <?php foreach ($products as $p): 
+                                $current_stock = intval($p['stock'] ?? 10);
+                            ?>
                                 <tr style="border-bottom: 1px solid #f1f5f9;">
                                     <td style="padding: 10px;">
                                         <img src="../<?php echo htmlspecialchars($p['image']); ?>" alt="thumb" style="width: 45px; height: 45px; object-fit: contain; border-radius: 4px; background: #f8fafc; border: 1px solid #e2e8f0;">
@@ -204,6 +235,18 @@ include_once '../includes/header.php';
                                     <td style="padding: 12px 10px; color: #166534; font-weight: bold;">
                                         Ksh <?php echo number_format($p['price'], 0); ?>
                                     </td>
+                                    
+                                    <!-- INLINE QUICK STOCK EDITING FORM -->
+                                    <td style="padding: 12px 10px;">
+                                        <form method="POST" action="manage_products.php" style="display: flex; gap: 5px; align-items: center;">
+                                            <input type="hidden" name="product_id" value="<?php echo $p['id']; ?>">
+                                            <input type="number" name="stock_qty" value="<?php echo $current_stock; ?>" min="0" style="width: 60px; padding: 6px; border: 1px solid <?php echo $current_stock > 0 ? '#cbd5e1' : '#fca5a5'; ?>; border-radius: 4px; text-align: center; font-weight: bold; background: <?php echo $current_stock > 0 ? '#fff' : '#fef2f2'; ?>;">
+                                            <button type="submit" name="update_stock" title="Save Stock Level" style="background: #0284c7; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">
+                                                Save
+                                            </button>
+                                        </form>
+                                    </td>
+
                                     <td style="padding: 12px 10px; text-align: right;">
                                         <a href="manage_products.php?action=delete&id=<?php echo $p['id']; ?>" 
                                            onclick="return confirm('Are you sure you want to delete this product?');" 
@@ -215,7 +258,7 @@ include_once '../includes/header.php';
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="5" style="padding: 20px; text-align: center; color: #64748b;">No products in database.</td>
+                                <td colspan="6" style="padding: 20px; text-align: center; color: #64748b;">No products in database.</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>

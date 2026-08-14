@@ -9,15 +9,73 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 require_once '../includes/db_connect.php';
 
 $message = '';
+$error = '';
 
-// 2. Handle Status Updates (PENDING, COMPLETED, CANCELLED)
+// 2. Handle Status Updates (PENDING, COMPLETED, CANCELLED) + Automated Inventory Adjustment
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
-    $order_id = intval($_POST['order_id']);
+    $order_id   = intval($_POST['order_id']);
     $new_status = trim($_POST['status']);
     
-    $stmt = $pdo->prepare("UPDATE orders SET status = :status WHERE id = :id");
-    if ($stmt->execute(['status' => $new_status, 'id' => $order_id])) {
-        $message = "Order status updated successfully!";
+    // Fetch previous order status
+    $stmtPrev = $pdo->prepare("SELECT status FROM orders WHERE id = :id");
+    $stmtPrev->execute(['id' => $order_id]);
+    $old_status = $stmtPrev->fetchColumn();
+
+    if ($old_status !== false && $old_status !== $new_status) {
+        $stmt = $pdo->prepare("UPDATE orders SET status = :status WHERE id = :id");
+        if ($stmt->execute(['status' => $new_status, 'id' => $order_id])) {
+            
+            // Fetch order items to handle stock adjustments
+            $itemsStmt = $pdo->prepare("SELECT * FROM order_items WHERE order_id = :order_id");
+            $itemsStmt->execute(['order_id' => $order_id]);
+            $orderItems = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // DEDUCT STOCK: When order is marked COMPLETED
+            if ($new_status === 'COMPLETED' && $old_status !== 'COMPLETED') {
+                foreach ($orderItems as $item) {
+                    $p_id = $item['product_id'] ?? $item['item_id'] ?? null;
+                    $qty  = intval($item['quantity'] ?? $item['qty'] ?? 1);
+
+                    if ($p_id) {
+                        $pCheck = $pdo->prepare("SELECT item_type FROM products WHERE id = :id");
+                        $pCheck->execute(['id' => $p_id]);
+                        $prod = $pCheck->fetch(PDO::FETCH_ASSOC);
+                        $type = $prod['item_type'] ?? 'product';
+
+                        // Deduct stock for physical products only
+                        if ($type === 'product') {
+                            $deductStmt = $pdo->prepare("UPDATE products SET stock = GREATEST(0, stock - :qty) WHERE id = :id");
+                            $deductStmt->execute(['qty' => $qty, 'id' => $p_id]);
+                        }
+                    }
+                }
+                $message = "Order marked as COMPLETED and product stock deducted from inventory!";
+            } 
+            // RESTORE STOCK: If status was reverted from COMPLETED back to PENDING/CANCELLED
+            elseif ($old_status === 'COMPLETED' && $new_status !== 'COMPLETED') {
+                foreach ($orderItems as $item) {
+                    $p_id = $item['product_id'] ?? $item['item_id'] ?? null;
+                    $qty  = intval($item['quantity'] ?? $item['qty'] ?? 1);
+
+                    if ($p_id) {
+                        $pCheck = $pdo->prepare("SELECT item_type FROM products WHERE id = :id");
+                        $pCheck->execute(['id' => $p_id]);
+                        $prod = $pCheck->fetch(PDO::FETCH_ASSOC);
+                        $type = $prod['item_type'] ?? 'product';
+
+                        if ($type === 'product') {
+                            $restoreStmt = $pdo->prepare("UPDATE products SET stock = stock + :qty WHERE id = :id");
+                            $restoreStmt->execute(['qty' => $qty, 'id' => $p_id]);
+                        }
+                    }
+                }
+                $message = "Order status updated to {$new_status} and product stock restored!";
+            } else {
+                $message = "Order status updated to {$new_status} successfully!";
+            }
+        } else {
+            $error = "Failed to update order status.";
+        }
     }
 }
 
@@ -59,9 +117,16 @@ include_once '../includes/header.php';
             </a>
         </div>
 
+        <!-- Alert Notifications -->
         <?php if ($message): ?>
             <div style="background: #dcfce7; color: #15803d; padding: 12px 20px; border-radius: 6px; margin-bottom: 25px; font-weight: bold;">
                 <?php echo htmlspecialchars($message); ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($error): ?>
+            <div style="background: #fee2e2; color: #b91c1c; padding: 12px 20px; border-radius: 6px; margin-bottom: 25px; font-weight: bold;">
+                <?php echo htmlspecialchars($error); ?>
             </div>
         <?php endif; ?>
 
