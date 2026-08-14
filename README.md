@@ -26,7 +26,7 @@ An enterprise‑grade website and web application for **Blue Edge Solutions Limi
 
 ---
 
-## 🛠 Tech Stack
+##  Tech Stack
 
 - **Backend:** PHP 8.x (PDO / MySQL)  
 - **Frontend:** HTML5, CSS3, Vanilla JavaScript (ES6+), Phosphor Icons  
