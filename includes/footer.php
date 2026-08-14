@@ -115,5 +115,8 @@ function declineCookies() {
 </script>
 <?php endif; ?>
 
+    <!-- Load Main Site JS -->
+    <script src="<?php echo $base ?? ''; ?>assets/js/main.js"></script>
+
 </body>
 </html>

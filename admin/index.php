@@ -1,11 +1,15 @@
 <?php
 // 1. Session check to protect the page
-session_start();
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header("Location: login.php");
-    exit();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
 
+// If not logged in, do NOT reveal the login key — send them to the main public homepage (or 404)
+if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+    header("Location: ../index.php");
+    exit();
+}
+    
 require_once '../includes/db_connect.php';
 
 $message = '';
@@ -107,14 +111,9 @@ include_once '../includes/header.php';
     <div style="max-width: 1100px; margin: 0 auto;">
         
         <!-- Welcome Hero Box -->
-        <div style="background: linear-gradient(135deg, #002d62 0%, #001f42 100%); color: white; padding: 30px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
-            <div>
-                <h1 style="margin: 0 0 8px 0; color: #cbd5e1; font-size: 1.8rem;">Welcome back, <?php echo htmlspecialchars($_SESSION['admin_username'] ?? 'Admin'); ?>!</h1>
-                <p style="margin: 0; color: #cbd5e1; font-size: 1rem;">Manage client tickets, hardware shop inventory, or blog content below.</p>
-            </div>
-            <a href="logout.php" style="background: rgba(255,255,255,0.15); color: white; text-decoration: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; border: 1px solid rgba(255,255,255,0.3);">
-                Log Out
-            </a>
+        <div style="background: #002d62; color: white; padding: 35px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            <h1 style="margin: 0 0 8px 0; font-size: 2rem;">Welcome back, <?php echo htmlspecialchars(strtolower($_SESSION['admin_fullname'] ?? $_SESSION['admin_username'])); ?>!</h1>
+            <p style="margin: 0; color: #cbd5e1; font-size: 1rem;">Manage client tickets, hardware shop inventory, or blog content below.</p>
         </div>
 
         <!-- Alert Notifications -->
@@ -207,7 +206,7 @@ include_once '../includes/header.php';
         </div>
 
         <!-- RECENT ORDERS TABLE -->
-        <div id="orders-section" style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; overflow-x: auto;">
+        <div id="orders-section" style="scroll-margin-top: 80px; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; overflow-x: auto;">
             <h3 style="color: #002d62; margin-top: 0; margin-bottom: 20px; font-size: 1.25rem;">Client Orders & Service Tickets (<?php echo count($orders); ?>)</h3>
 
             <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
@@ -244,7 +243,7 @@ include_once '../includes/header.php';
                                     Ksh <?php echo number_format($o['total_amount'], 2); ?>
                                 </td>
                                 <td style="padding: 10px;">
-                                    <form method="POST" action="index.php" style="margin: 0;">
+                                    <form method="POST" action="index.php#orders-section" style="margin: 0;">
                                         <input type="hidden" name="order_id" value="<?php echo $o['id']; ?>">
                                         <select name="status" onchange="this.form.submit()" style="padding: 4px 8px; border-radius: 4px; border: 1px solid #cbd5e1; font-weight: bold; font-size: 0.85rem; color: <?php echo $o['status'] === 'COMPLETED' ? '#166534' : ($o['status'] === 'CANCELLED' ? '#dc2626' : '#d97706'); ?>;">
                                             <option value="PENDING" <?php echo $o['status'] === 'PENDING' ? 'selected' : ''; ?>>PENDING</option>
