@@ -3,23 +3,19 @@
 require_once 'includes/db_connect.php';
 
 // Inject the global header navigation
-$page_title = "User Craft Consultants | Premium ICT Support & Systems Integration";
+$page_title = "UserCraft Consult | Premium ICT Support & Systems Integration";
 include_once 'includes/header.php';
 ?>
 
 <main style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f1f5f9; padding-bottom: 90px; color: #1e293b;">
 
     <!-- Brand Introduction Header Banner -->
-    <header style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 70px 20px; text-align: center; border-bottom: 4px solid #ff7300;">
+    <header style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 60px 20px; text-align: center; border-bottom: 4px solid #ff7300;">
         <div style="max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; align-items: center;">
             
-            <!-- FIXED: Circular, Centered Logo Image Layout Wrapper -->
-            <img src="assets/images/UserCraft.png" alt="User Craft Consultants Logo" 
-                 style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%; margin: 0 auto 25px auto; display: block; border: 3px solid #ff7300; box-shadow: 0px 4px 10px rgba(0,0,0,0.3); background-color: #0f172a;">
-            
-            <h1 style="font-size: 2.5rem; font-weight: 700; color: #f8fafc; margin: 0 0 15px 0; width: 100%;">ICT Support & Systems Integration</h1>
-            <p style="font-size: 1.15rem; color: #94a3b8; line-height: 1.6; max-width: 650px; margin: 0 auto;">
-                The official service-only company. We specialize strictly in technical deployments, system optimizations, and hands-on operational maintenance—<strong>No Sales Pressure, Pure Technical Expertise.</strong>
+            <h1 style="font-size: 2.5rem; font-weight: 700; color: #f8fafc; margin: 0 0 10px 0; width: 100%;">Welcome to UserCraft Consult</h1>
+            <p style="font-size: 1.35rem; font-weight: 600; color: #ff7300; line-height: 1.6; max-width: 650px; margin: 0 auto;">
+                ICT Support & Systems Integration
             </p>
         </div>
     </header>

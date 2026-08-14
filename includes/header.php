@@ -1,24 +1,4 @@
 <?php 
-// 1. Ensure PHP Session is running
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-// 2. FEATURE 3: PERSISTENT GUEST COOKIE LOGIC
-// Assign a 30-day guest device token if it doesn't exist yet
-if (!isset($_COOKIE['guest_device_id'])) {
-    $guest_id = bin2hex(random_bytes(16));
-    setcookie('guest_device_id', $guest_id, time() + (86400 * 30), "/");
-}
-
-// Restore saved guest cart from cookie if session expired
-if (empty($_SESSION['cart']) && isset($_COOKIE['saved_guest_cart'])) {
-    $decoded_cart = json_decode($_COOKIE['saved_guest_cart'], true);
-    if (is_array($decoded_cart)) {
-        $_SESSION['cart'] = $decoded_cart;
-    }
-}
-
 // Fallback if $base_url isn't defined on a root page
 $base = $base_url ?? ''; 
 
@@ -39,21 +19,45 @@ $isUsercraft = ($currentPage === 'usercraft.php' || (isset($page_title) && strpo
     <!-- Dynamic CSS Path -->
     <link rel="stylesheet" href="<?php echo $base; ?>assets/css/style.css">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <?php if ($isUsercraft): ?>
+    <style>
+        /* Dark Theme overrides specifically for UserCraft navbar */
+        .main-header.usercraft-header {
+            background-color: #000000 !important;
+            border-bottom: 2px solid #ff7300;
+            padding: 12px 0;
+        }
+        .usercraft-header .nav-links a {
+            color: #f8fafc !important;
+        }
+        .usercraft-header .nav-links a:hover {
+            color: #ff7300 !important;
+        }
+        .usercraft-header .cart-btn {
+            color: #ffffff !important;
+        }
+    </style>
+    <?php endif; ?>
 </head>
 <body>
 
-    <header class="main-header">
-        <div class="container nav-container">
-            <!-- DYNAMIC BRAND LOGO (TEXT-BASED) -->
-            <a href="<?php echo $base; ?>index.php" class="brand-logo">
-                <?php if ($isUsercraft): ?>
-                    UserCraft<span>.</span>
-                <?php else: ?>
+    <header class="main-header <?php echo $isUsercraft ? 'usercraft-header' : ''; ?>">
+        <div class="container nav-container" style="display: flex; align-items: center; justify-content: space-between; gap: 20px;">
+            
+            <!-- 1. FAR LEFT: ENLARGED HIGH-VISIBILITY LOGO GRAPHIC -->
+            <?php if ($isUsercraft): ?>
+                <a href="<?php echo $base; ?>index.php" style="display: flex; align-items: center; text-decoration: none; flex-shrink: 0;">
+                    <img src="<?php echo $base; ?>assets/images/UserCraft.png" alt="UserCraft Consult" style="height: 700px; width: auto; max-height: 100px; object-fit: contain; display: block;">
+                </a>
+            <?php else: ?>
+                <a href="<?php echo $base; ?>index.php" class="brand-logo">
                     Blue Edge<span>.</span>
-                <?php endif; ?>
-            </a>
+                </a>
+            <?php endif; ?>
 
-            <nav class="desktop-nav">
+            <!-- 2. MIDDLE: NAVBAR NAVIGATION -->
+            <nav class="desktop-nav" style="flex-grow: 1; display: flex; justify-content: center;">
                 <ul class="nav-links">
                     <li><a href="<?php echo $base; ?>index.php">Home</a></li>
                     <li><a href="<?php echo $base; ?>about.php">About Us</a></li>
@@ -66,15 +70,28 @@ $isUsercraft = ($currentPage === 'usercraft.php' || (isset($page_title) && strpo
                 </ul>
             </nav>
 
-            <div class="nav-actions" style="display: flex; align-items: center; gap: 15px;">
+            <!-- 3. FAR RIGHT: CART FIRST, THEN CONTACT DETAILS -->
+            <div class="nav-actions" style="display: flex; align-items: center; gap: 22px; flex-shrink: 0;">
+                
                 <!-- GLOBAL HEADER CART BUTTON -->
-                <button onclick="toggleCart()" style="background: none; border: none; color: #002d62; font-weight: bold; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: color 0.2s; padding: 0;">
+                <button onclick="toggleCart()" class="cart-btn" style="background: none; border: none; color: <?php echo $isUsercraft ? '#ffffff' : '#002d62'; ?>; font-weight: bold; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: color 0.2s; padding: 0;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16"><path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .49.598l-1 5a.5.5 0 0 1-.465.401l-9.397.472L4.415 11H13a.5.5 0 0 1 0 1H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5zM3.102 4l.84 4.479 9.144-.459L13.89 4H3.102zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
-                    (<span id="cartCount"><?php echo isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0; ?></span>)
+                    (<span id="cartCount">0</span>)
                 </button>
 
-                <a href="<?php echo $base; ?>contact.php" class="btn btn-primary">Get in Touch</a>
-                
+                <!-- CONTACT DETAILS (FAR RIGHT END) -->
+                <?php if ($isUsercraft): ?>
+                    <div style="display: flex; flex-direction: column; font-size: 0.78rem; color: #cbd5e1; line-height: 1.35; text-align: right;">
+                        <strong style="font-size: 0.95rem; color: #ffffff;">UserCraft Consult</strong>
+                        <span>P.O Box 4119-00100 Nairobi</span>
+                        <span>Caxton House 1st Floor, Kenyatta Ave</span>
+                        <span>Email: usercraft@gmail.com</span>
+                        <span>Phone: 0722-146-546</span>
+                    </div>
+                <?php else: ?>
+                    <a href="<?php echo $base; ?>contact.php" class="btn btn-primary">Get in Touch</a>
+                <?php endif; ?>
+
                 <button class="mobile-menu-btn" aria-label="Open Menu">
                     <i class="ph ph-list"></i>
                 </button>
@@ -89,7 +106,7 @@ $isUsercraft = ($currentPage === 'usercraft.php' || (isset($page_title) && strpo
                 <li><a href="<?php echo $base; ?>shop.php">Shop</a></li>
                 <li><a href="<?php echo $base; ?>blog.php">Blog</a></li>
                 <li><a href="<?php echo $base; ?>usercraft.php">UserCraft</a></li>
-                <li><a href="#" onclick="toggleCart(); return false;" class="mobile-contact-link" style="background: #e2e8f0; color: #002d62;">View Cart (<span id="mobileCartCount"><?php echo isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0; ?></span>)</a></li>
+                <li><a href="#" onclick="toggleCart(); return false;" class="mobile-contact-link" style="background: #e2e8f0; color: #002d62;">View Cart (<span id="mobileCartCount">0</span>)</a></li>
                 <li><a href="<?php echo $base; ?>contact.php" class="mobile-contact-link">Get in Touch</a></li>
             </ul>
         </nav>
