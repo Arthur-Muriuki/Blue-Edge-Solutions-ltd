@@ -12,9 +12,15 @@ require_once '../includes/db_connect.php';
 $message = '';
 $error = '';
 
-// Auto-patch 'products' table to ensure 'stock' column exists
+// Auto-patch 'products' table to ensure required columns exist
 try {
     $pdo->exec("ALTER TABLE products ADD COLUMN stock INT NOT NULL DEFAULT 10");
+} catch (PDOException $e) {
+    // Ignored if column already exists
+}
+
+try {
+    $pdo->exec("ALTER TABLE products ADD COLUMN item_type VARCHAR(50) NOT NULL DEFAULT 'product'");
 } catch (PDOException $e) {
     // Ignored if column already exists
 }
@@ -53,6 +59,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
     $badge       = !empty($_POST['badge']) ? trim($_POST['badge']) : NULL;
     $stock       = isset($_POST['stock']) ? max(0, intval($_POST['stock'])) : 10;
     
+    // Auto-detect item_type based on Category selection
+    $serviceCategories = ['Repairs', 'Management', 'Service', 'Services', 'Subscription'];
+    $item_type = in_array($category, $serviceCategories) ? 'service' : 'product';
+
     // Default image path fallback
     $image_path = 'assets/images/placeholder.jpeg';
 
@@ -81,8 +91,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
     }
 
     if (empty($error) && !empty($title) && !empty($category) && $price > 0) {
-        $sql = "INSERT INTO products (title, category, price, price_label, description, image, badge, stock) 
-                VALUES (:title, :category, :price, :price_label, :description, :image, :badge, :stock)";
+        $sql = "INSERT INTO products (title, category, price, price_label, description, image, badge, stock, item_type) 
+                VALUES (:title, :category, :price, :price_label, :description, :image, :badge, :stock, :item_type)";
         $stmt = $pdo->prepare($sql);
         if ($stmt->execute([
             'title'       => $title,
@@ -92,7 +102,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
             'description' => $description,
             'image'       => $image_path,
             'badge'       => $badge,
-            'stock'       => $stock
+            'stock'       => $stock,
+            'item_type'   => $item_type
         ])) {
             $message = "New item added to inventory successfully!";
         } else {
@@ -158,8 +169,8 @@ include_once '../includes/header.php';
                             <option value="Networking">Networking</option>
                             <option value="Hardware">Hardware</option>
                             <option value="Consumables">Consumables</option>
-                            <option value="Repairs">Repairs</option>
-                            <option value="Management">Management</option>
+                            <option value="Repairs">Repairs (Service)</option>
+                            <option value="Management">Management (Service)</option>
                         </select>
                     </div>
 
@@ -169,8 +180,8 @@ include_once '../includes/header.php';
                             <input type="number" step="0.01" name="price" required placeholder="25000" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
                         </div>
                         <div style="flex: 1;">
-                            <label style="display: block; font-weight: bold; color: #475569; margin-bottom: 5px;">Stock Quantity *</label>
-                            <input type="number" name="stock" required value="10" min="0" placeholder="10" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
+                            <label style="display: block; font-weight: bold; color: #475569; margin-bottom: 5px;">Stock Qty (Physical)</label>
+                            <input type="number" name="stock" value="10" min="0" placeholder="10" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
                         </div>
                     </div>
 
@@ -221,6 +232,12 @@ include_once '../includes/header.php';
                         <?php if (!empty($products)): ?>
                             <?php foreach ($products as $p): 
                                 $current_stock = intval($p['stock'] ?? 10);
+                                $type = strtolower($p['item_type'] ?? '');
+                                $cat  = strtolower($p['category'] ?? '');
+                                
+                                // Determine if this item is a Service or Physical Product
+                                $is_service = ($type === 'service' || $type === 'subscription') || 
+                                             in_array($cat, ['repairs', 'management', 'service', 'services', 'support']);
                             ?>
                                 <tr style="border-bottom: 1px solid #f1f5f9;">
                                     <td style="padding: 10px;">
@@ -236,15 +253,23 @@ include_once '../includes/header.php';
                                         Ksh <?php echo number_format($p['price'], 0); ?>
                                     </td>
                                     
-                                    <!-- INLINE QUICK STOCK EDITING FORM -->
+                                    <!-- STOCK COLUMN: Check if Service vs Physical Product -->
                                     <td style="padding: 12px 10px;">
-                                        <form method="POST" action="manage_products.php" style="display: flex; gap: 5px; align-items: center;">
-                                            <input type="hidden" name="product_id" value="<?php echo $p['id']; ?>">
-                                            <input type="number" name="stock_qty" value="<?php echo $current_stock; ?>" min="0" style="width: 60px; padding: 6px; border: 1px solid <?php echo $current_stock > 0 ? '#cbd5e1' : '#fca5a5'; ?>; border-radius: 4px; text-align: center; font-weight: bold; background: <?php echo $current_stock > 0 ? '#fff' : '#fef2f2'; ?>;">
-                                            <button type="submit" name="update_stock" title="Save Stock Level" style="background: #0284c7; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">
-                                                Save
-                                            </button>
-                                        </form>
+                                        <?php if ($is_service): ?>
+                                            <!-- Non-editable Badge for Unlimited Services -->
+                                            <span style="background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.82rem; display: inline-block; border: 1px solid #e2e8f0;">
+                                                ∞ Service (N/A)
+                                            </span>
+                                        <?php else: ?>
+                                            <!-- Inline Stock Edit Form for Physical Hardware/Consumables -->
+                                            <form method="POST" action="manage_products.php" style="display: flex; gap: 5px; align-items: center; margin: 0;">
+                                                <input type="hidden" name="product_id" value="<?php echo $p['id']; ?>">
+                                                <input type="number" name="stock_qty" value="<?php echo $current_stock; ?>" min="0" style="width: 60px; padding: 6px; border: 1px solid <?php echo $current_stock > 0 ? '#cbd5e1' : '#fca5a5'; ?>; border-radius: 4px; text-align: center; font-weight: bold; background: <?php echo $current_stock > 0 ? '#fff' : '#fef2f2'; ?>;">
+                                                <button type="submit" name="update_stock" title="Save Stock Level" style="background: #0284c7; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">
+                                                    Save
+                                                </button>
+                                            </form>
+                                        <?php endif; ?>
                                     </td>
 
                                     <td style="padding: 12px 10px; text-align: right;">
