@@ -83,7 +83,7 @@ $isUsercraft = ($currentPage === 'usercraft.php' || (isset($page_title) && strpo
 
                 <a href="profile.php" style="color: white; text-decoration: none; transition: opacity 0.2s;">My Profile</a>
                 <a href="../index.php" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 4px; border: 1px solid #334155; padding: 4px 10px; border-radius: 6px;">
-                    🌐 View Site
+                     View Site
                 </a>
                 <a href="logout.php" style="color: #f87171; text-decoration: none; font-weight: 700; background: rgba(239, 68, 68, 0.1); padding: 5px 12px; border-radius: 6px;">
                     Logout
