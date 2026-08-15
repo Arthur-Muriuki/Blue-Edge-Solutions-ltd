@@ -23,39 +23,68 @@ if (($_SESSION['admin_role'] ?? '') !== 'SUPER_ADMIN') {
 $message = '';
 $error = '';
 
+// Password Strength Validation Helper Function
+function validatePasswordStrength($password) {
+    if (strlen($password) < 8) {
+        return "Password must be at least 8 characters long.";
+    }
+    if (!preg_match('/[A-Z]/', $password)) {
+        return "Password must contain at least one uppercase letter (A-Z).";
+    }
+    if (!preg_match('/[a-z]/', $password)) {
+        return "Password must contain at least one lowercase letter (a-z).";
+    }
+    if (!preg_match('/[0-9]/', $password)) {
+        return "Password must contain at least one number (0-9).";
+    }
+    if (!preg_match('/[\W_]/', $password)) {
+        return "Password must contain at least one special character (!@#$%^&*).";
+    }
+    return true;
+}
+
 // 2. HANDLE FORM ACTIONS (ADD, DELETE, RESET PASSWORD)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
     // A. ADD NEW STAFF MEMBER
     if ($action === 'add_staff') {
-        $username  = trim($_POST['username'] ?? '');
-        $fullname  = trim($_POST['full_name'] ?? '');
-        $password  = $_POST['password'] ?? '';
-        $role      = $_POST['role'] ?? 'STAFF_ADMIN';
+        $name     = trim($_POST['full_name'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $role     = $_POST['role'] ?? 'STAFF_ADMIN';
 
-        if (!empty($username) && !empty($fullname) && !empty($password)) {
-            // Check if username already exists
-            $checkStmt = $pdo->prepare("SELECT id FROM admins WHERE username = :username");
-            $checkStmt->execute([':username' => $username]);
-            
-            if ($checkStmt->fetch()) {
-                $error = "Username '{$username}' is already taken.";
+        if (!empty($name) && !empty($password)) {
+            // Validate Password Strength
+            $pwdCheck = validatePasswordStrength($password);
+            if ($pwdCheck !== true) {
+                $error = $pwdCheck;
             } else {
-                $stmt = $pdo->prepare("
-                    INSERT INTO admins (username, password, full_name, role)
-                    VALUES (:username, :password, :full_name, :role)
-                ");
-                $stmt->execute([
-                    ':username'  => $username,
-                    ':password'  => password_hash($password, PASSWORD_DEFAULT),
-                    ':full_name' => $fullname,
-                    ':role'      => $role
+                // Check if account name already exists with distinct parameters
+                $checkStmt = $pdo->prepare("SELECT id FROM admins WHERE username = :u_name OR full_name = :f_name");
+                $checkStmt->execute([
+                    ':u_name' => $name,
+                    ':f_name' => $name
                 ]);
-                $message = "New staff account '{$username}' created successfully!";
+                
+                if ($checkStmt->fetch()) {
+                    $error = "An admin with the name '{$name}' already exists.";
+                } else {
+                    // Set both username and full_name to the provided name with distinct placeholders
+                    $stmt = $pdo->prepare("
+                        INSERT INTO admins (username, password, full_name, role)
+                        VALUES (:username, :password, :full_name, :role)
+                    ");
+                    $stmt->execute([
+                        ':username'  => $name,
+                        ':password'  => password_hash($password, PASSWORD_DEFAULT),
+                        ':full_name' => $name,
+                        ':role'      => $role
+                    ]);
+                    $message = "New sub-admin account '{$name}' created successfully!";
+                }
             }
         } else {
-            $error = "Please complete all fields to create a staff account.";
+            $error = "Please provide both Name and Password.";
         }
     }
 
@@ -65,12 +94,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $new_password = $_POST['new_password'] ?? '';
 
         if ($staff_id > 0 && !empty($new_password)) {
-            $stmt = $pdo->prepare("UPDATE admins SET password = :password WHERE id = :id");
-            $stmt->execute([
-                ':password' => password_hash($new_password, PASSWORD_DEFAULT),
-                ':id'       => $staff_id
-            ]);
-            $message = "Staff password updated successfully!";
+            $pwdCheck = validatePasswordStrength($new_password);
+            if ($pwdCheck !== true) {
+                $error = "Reset failed: " . $pwdCheck;
+            } else {
+                $stmt = $pdo->prepare("UPDATE admins SET password = :password WHERE id = :id");
+                $stmt->execute([
+                    ':password' => password_hash($new_password, PASSWORD_DEFAULT),
+                    ':id'       => $staff_id
+                ]);
+                $message = "Staff password updated successfully!";
+            }
         } else {
             $error = "Password cannot be blank.";
         }
@@ -80,7 +114,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     elseif ($action === 'delete_staff') {
         $staff_id = (int)($_POST['staff_id'] ?? 0);
 
-        // Prevent self-deletion
         if ($staff_id === (int)$_SESSION['admin_id']) {
             $error = "You cannot delete your own Super Admin account!";
         } elseif ($staff_id > 0) {
@@ -102,11 +135,10 @@ include_once '../includes/header.php';
 <main style="background-color: #f8fafc; min-height: 80vh; padding: 40px 20px;">
     <div style="max-width: 1100px; margin: 0 auto;">
         
-        <!-- Header Nav Bar -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
             <div>
                 <h1 style="color: #002d62; margin: 0; font-size: 1.8rem;">Staff Management</h1>
-                <p style="color: #64748b; margin: 5px 0 0 0;">Create sub-admin accounts, manage permissions, and reset passwords.</p>
+                <p style="color: #64748b; margin: 5px 0 0 0;">Create sub-admins using just their name and password.</p>
             </div>
             <div style="display: flex; gap: 10px;">
                 <a href="index.php" style="background: #e2e8f0; color: #334155; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.9rem;">← Dashboard</a>
@@ -114,7 +146,6 @@ include_once '../includes/header.php';
             </div>
         </div>
 
-        <!-- Alert Messages -->
         <?php if ($message): ?>
             <div style="background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; padding: 14px; border-radius: 8px; margin-bottom: 25px; font-weight: bold;">
                 ✅ <?php echo htmlspecialchars($message); ?>
@@ -131,25 +162,26 @@ include_once '../includes/header.php';
             <!-- LEFT COLUMN: ADD NEW STAFF FORM -->
             <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
                 <h3 style="color: #002d62; margin-top: 0; margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">
-                    ➕ Add New Sub-Admin
+                    ➕ Add Sub-Admin
                 </h3>
                 
                 <form method="POST" action="manage-staff.php" style="display: flex; flex-direction: column; gap: 16px;">
                     <input type="hidden" name="action" value="add_staff">
                     
                     <div>
-                        <label style="font-weight: bold; color: #334155; display: block; margin-bottom: 6px; font-size: 0.85rem;">Full Name</label>
+                        <label style="font-weight: bold; color: #334155; display: block; margin-bottom: 6px; font-size: 0.85rem;">Admin Name</label>
                         <input type="text" name="full_name" required placeholder="e.g. John Doe" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
                     </div>
 
                     <div>
-                        <label style="font-weight: bold; color: #334155; display: block; margin-bottom: 6px; font-size: 0.85rem;">Username</label>
-                        <input type="text" name="username" required placeholder="e.g. johndoe" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
-                    </div>
-
-                    <div>
-                        <label style="font-weight: bold; color: #334155; display: block; margin-bottom: 6px; font-size: 0.85rem;">Initial Password</label>
-                        <input type="password" name="password" required placeholder="Create temporary password" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                        <label style="font-weight: bold; color: #334155; display: block; margin-bottom: 6px; font-size: 0.85rem;">Password</label>
+                        <div style="position: relative;">
+                            <input type="password" id="staffPassword" name="password" required placeholder="Strong password (8+ chars, A-Z, 0-9, symbol)" style="width: 100%; padding: 10px 38px 10px 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 0.85rem;">
+                            <button type="button" onclick="togglePasswordVisibility('staffPassword', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #64748b; font-size: 1rem; padding: 0;">
+                                👁️
+                            </button>
+                        </div>
+                        <small style="color: #64748b; font-size: 0.75rem; display: block; margin-top: 4px;">Must have 8+ chars, upper & lower case, number, & symbol.</small>
                     </div>
 
                     <div>
@@ -161,13 +193,13 @@ include_once '../includes/header.php';
                     </div>
 
                     <button type="submit" style="background: #ff7300; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 10px;">
-                        Create Account
+                        Create Sub-Admin
                     </button>
                 </form>
             </div>
 
             <!-- RIGHT COLUMN: EXISTING STAFF TABLE -->
-            <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; grid-column: span 1;">
+            <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
                 <h3 style="color: #002d62; margin-top: 0; margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">
                     👥 Active Admin Team
                 </h3>
@@ -176,9 +208,8 @@ include_once '../includes/header.php';
                     <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
                         <thead>
                             <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
-                                <th style="padding: 10px; color: #475569;">User</th>
+                                <th style="padding: 10px; color: #475569;">Admin Name</th>
                                 <th style="padding: 10px; color: #475569;">Role</th>
-                                <th style="padding: 10px; color: #475569;">Last Login</th>
                                 <th style="padding: 10px; color: #475569; text-align: right;">Actions</th>
                             </tr>
                         </thead>
@@ -186,8 +217,7 @@ include_once '../includes/header.php';
                             <?php foreach ($staffList as $staff): ?>
                             <tr style="border-bottom: 1px solid #f1f5f9;">
                                 <td style="padding: 12px 10px;">
-                                    <strong><?php echo htmlspecialchars($staff['full_name']); ?></strong><br>
-                                    <span style="color: #64748b; font-size: 0.8rem;">@<?php echo htmlspecialchars($staff['username']); ?></span>
+                                    <strong><?php echo htmlspecialchars($staff['full_name'] ?? $staff['username']); ?></strong>
                                 </td>
                                 <td style="padding: 12px 10px;">
                                     <?php if ($staff['role'] === 'SUPER_ADMIN'): ?>
@@ -196,13 +226,9 @@ include_once '../includes/header.php';
                                         <span style="background: #f1f5f9; color: #475569; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold;">SUB ADMIN</span>
                                     <?php endif; ?>
                                 </td>
-                                <td style="padding: 12px 10px; color: #64748b; font-size: 0.8rem;">
-                                    <?php echo $staff['last_login'] ? date('M j, g:i a', strtotime($staff['last_login'])) : 'Never'; ?>
-                                </td>
                                 <td style="padding: 12px 10px; text-align: right;">
                                     <div style="display: flex; gap: 6px; justify-content: flex-end;">
-                                        <!-- Quick Reset Password Form -->
-                                        <form method="POST" action="manage-staff.php" onsubmit="const p = prompt('Enter new password for <?php echo htmlspecialchars($staff['username']); ?>:'); if(p){ this.new_password.value = p; return true; } return false;">
+                                        <form method="POST" action="manage-staff.php" onsubmit="const p = prompt('Enter new strong password for <?php echo htmlspecialchars($staff['full_name']); ?>:'); if(p){ this.new_password.value = p; return true; } return false;">
                                             <input type="hidden" name="action" value="reset_password">
                                             <input type="hidden" name="staff_id" value="<?php echo $staff['id']; ?>">
                                             <input type="hidden" name="new_password" value="">
@@ -211,9 +237,8 @@ include_once '../includes/header.php';
                                             </button>
                                         </form>
 
-                                        <!-- Delete Form (Only if not self) -->
                                         <?php if ((int)$staff['id'] !== (int)$_SESSION['admin_id']): ?>
-                                            <form method="POST" action="manage-staff.php" onsubmit="return confirm('Are you sure you want to remove <?php echo htmlspecialchars($staff['username']); ?>?');">
+                                            <form method="POST" action="manage-staff.php" onsubmit="return confirm('Are you sure you want to remove <?php echo htmlspecialchars($staff['full_name']); ?>?');">
                                                 <input type="hidden" name="action" value="delete_staff">
                                                 <input type="hidden" name="staff_id" value="<?php echo $staff['id']; ?>">
                                                 <button type="submit" style="background: #ef4444; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; font-weight: bold;">
@@ -233,5 +258,18 @@ include_once '../includes/header.php';
         </div>
     </div>
 </main>
+
+<script>
+function togglePasswordVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (input.type === "password") {
+        input.type = "text";
+        btn.textContent = "🙈";
+    } else {
+        input.type = "password";
+        btn.textContent = "👁️";
+    }
+}
+</script>
 
 <?php include_once '../includes/footer.php'; ?>
