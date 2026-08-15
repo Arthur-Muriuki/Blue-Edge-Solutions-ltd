@@ -1,10 +1,19 @@
 # Blue Edge Solutions Limited | IT Infrastructure & E‑Commerce Platform
 
-An enterprise‑grade website and web application for **Blue Edge Solutions Limited**, featuring IT service offerings, a dynamic hardware shop, slide‑out cart drawer, persistent guest session tracking, automated order ticketing, and real‑time administrative order management.
+An enterprise‑grade website and web application for **Blue Edge Solutions Limited**, featuring IT service offerings, a dynamic hardware shop, slide‑out cart drawer, persistent guest session tracking, automated order ticketing, multi-tier administrative controls, security audit logging, and real‑time system notifications.
 
 ---
 
-##  Key Features
+## 🚀 Key Features
+
+- **Multi-Tier Role-Based Access Control (RBAC)**  
+  Enforces granular permissions separating `SUPER_ADMIN` and `STAFF_ADMIN` roles. Restricts administrative user management and sensitive system controls exclusively to Super Admins with server-side authorization guards.
+
+- **Enterprise Audit Trail & System Activity Logs**  
+  Automated background logging of all administrative actions (login sessions, logouts, order status toggles, inventory modifications, and staff changes). Records detailed action metadata, user roles, timestamps, and IP addresses.
+
+- **Role-Aware Real-Time Notification Center**  
+  Dynamic notification bell with badge counters for pending orders, client inquiries, low-stock alerts, and staff actions. Intelligent filtering prevents self-notification loopbacks for logged-in Super Admins while keeping staff notifications focused strictly on operations.
 
 - **Interactive Hardware Shop & Cart Drawer**  
   Instant “Add to Cart” toast notifications with dynamic slide‑out cart drawer calculations and responsive mobile support.
@@ -30,30 +39,30 @@ An enterprise‑grade website and web application for **Blue Edge Solutions Limi
 - **Dynamic Multi-Brand Header**  
   Contextual branding logic that switches site identity dynamically for specialized landing pages (e.g., **UserCraft**).
 
-- **Staff Admin Dashboard**  
-  Secured admin control panel (`admin/index.php`) for live order status toggling (`PENDING`, `PROCESSING`, `COMPLETED`), ticket updates, and product management.
+- **Secured Admin Control Panel**  
+  Management interface (`admin/index.php`) equipped with CSRF token verification, cache control protections, order management (`PENDING`, `PROCESSING`, `COMPLETED`), and stock alerts.
 
 - **Self‑Healing Database Schema**  
-  Automatic database table creation (`orders` and `order_items`) and dynamic column patching upon checkout execution.
+  Automatic database table creation (`orders`, `order_items`, `activity_logs`) and dynamic column patching upon execution.
 
 ---
 
-##  Tech Stack
+## 🛠 Tech Stack
 
-- **Backend:** PHP 8.x (PDO / MySQL, Native Sessions & Cookies)  
+- **Backend:** PHP 8.x (PDO / MySQL, Native Sessions & Secure Cookies)  
 - **Frontend:** HTML5, CSS3, Vanilla JavaScript (ES6+), Phosphor Icons  
 - **Database:** MySQL / MariaDB  
 
 ---
 
-##  Important Notes
+## 📌 Important Notes
 
 - This application is in **active development** — features and schemas may be updated.  
 - Intended for **authorized internal use** and official company clients.  
 
 ---
 
-##  License & Usage
+## 📄 License & Usage
 
 This software and its source code are the proprietary property of **Blue Edge Solutions Limited**.  
 It is intended solely for internal use by authorized personnel or clients of the company.  
