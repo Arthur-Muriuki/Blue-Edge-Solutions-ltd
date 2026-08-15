@@ -1,14 +1,10 @@
 <?php
 require_once 'includes/db_connect.php';
 
-// 1. Auto-patch 'products' table to ensure 'stock' column exists
 try {
     $pdo->exec("ALTER TABLE products ADD COLUMN stock INT NOT NULL DEFAULT 10");
-} catch (PDOException $e) {
-    // Ignored if column already exists
-}
+} catch (PDOException $e) {}
 
-// 2. Fetch products
 try {
     $stmt = $pdo->query("SELECT * FROM products ORDER BY id DESC");
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -18,6 +14,8 @@ try {
 
 $page_title = "Shop & Services | Blue Edge Solutions";
 include_once 'includes/header.php';
+
+$base_path = $base ?? '';
 ?>
 
 <main style="font-family: 'Segoe UI', Tahoma, Geneva, sans-serif; background-color: #f8fafc; padding-bottom: 80px; min-height: 80vh;">
@@ -60,16 +58,22 @@ include_once 'includes/header.php';
                 <?php foreach ($products as $item): ?>
                     <?php 
                         $item_type  = $item['item_type'] ?? 'product'; 
-                        $safe_title = htmlspecialchars(addslashes($item['title']));
+                        $title      = $item['title'] ?? 'Untitled Item';
+                        $price      = floatval($item['price'] ?? 0);
                         $stock      = isset($item['stock']) ? intval($item['stock']) : 0;
                         $is_out_of_stock = ($item_type === 'product' && $stock <= 0);
+                        $image_src  = !empty($item['image']) ? $item['image'] : 'assets/images/placeholder.png';
                     ?>
-                    <div class="product-card" data-category="<?php echo htmlspecialchars($item['category'] ?? ''); ?>" style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;">
+                    <div class="product-card" 
+                         data-category="<?php echo htmlspecialchars($item['category'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" 
+                         style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s ease, box-shadow 0.2s ease;">
                         
                         <div style="background: #f8fafc; height: 220px; padding: 15px; display: flex; align-items: center; justify-content: center; position: relative;">
-                            <img src="<?php echo htmlspecialchars($item['image']); ?>" alt="<?php echo htmlspecialchars($item['title']); ?>" style="max-height: 100%; object-fit: contain; <?php echo $is_out_of_stock ? 'filter: grayscale(80%); opacity: 0.6;' : ''; ?>">
+                            <img src="<?php echo htmlspecialchars($image_src, ENT_QUOTES, 'UTF-8'); ?>" 
+                                 alt="<?php echo htmlspecialchars($title, ENT_QUOTES, 'UTF-8'); ?>" 
+                                 onerror="this.src='https://via.placeholder.com/300x200?text=No+Image';"
+                                 style="max-height: 100%; max-width: 100%; object-fit: contain; <?php echo $is_out_of_stock ? 'filter: grayscale(80%); opacity: 0.6;' : ''; ?>">
                             
-                            <!-- TYPE & STOCK BADGES -->
                             <?php if ($item_type === 'subscription'): ?>
                                 <span style="position: absolute; top: 12px; right: 12px; background: #0284c7; color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Monthly Plan</span>
                             <?php elseif ($item_type === 'booking'): ?>
@@ -80,17 +84,20 @@ include_once 'includes/header.php';
                         </div>
 
                         <div style="padding: 25px; display: flex; flex-direction: column; flex-grow: 1;">
-                            <h3 class="product-title" style="color: #002d62; font-size: 1.2rem; margin: 0 0 10px 0;"><?php echo htmlspecialchars($item['title']); ?></h3>
-                            <p style="color: #475569; font-size: 0.9rem; flex-grow: 1; margin-bottom: 20px;"><?php echo htmlspecialchars($item['description']); ?></p>
+                            <h3 class="product-title" style="color: #002d62; font-size: 1.2rem; margin: 0 0 10px 0;">
+                                <?php echo htmlspecialchars($title, ENT_QUOTES, 'UTF-8'); ?>
+                            </h3>
+                            <p style="color: #475569; font-size: 0.9rem; flex-grow: 1; margin-bottom: 20px; line-height: 1.4;">
+                                <?php echo htmlspecialchars($item['description'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
+                            </p>
                             
                             <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
                                 <div>
                                     <span style="font-size: 1.2rem; font-weight: bold; color: #002d62;">
-                                        Ksh <?php echo number_format($item['price'], 0); ?>
+                                        Ksh <?php echo number_format($price, 0); ?>
                                         <?php echo ($item_type === 'subscription') ? '<small style="font-size:0.75rem; font-weight:normal; color:#64748b;">/mo</small>' : ''; ?>
                                     </span>
                                     
-                                    <!-- STOCK QUANTITY DISPLAY -->
                                     <?php if ($item_type === 'product'): ?>
                                         <div style="font-size: 0.8rem; margin-top: 3px; font-weight: 600; color: <?php echo $stock > 0 ? '#16a34a' : '#dc2626'; ?>;">
                                             <?php echo $stock > 0 ? "In Stock ({$stock} left)" : "Out of Stock"; ?>
@@ -98,25 +105,36 @@ include_once 'includes/header.php';
                                     <?php endif; ?>
                                 </div>
                                 
-                                <!-- UNIFIED SMART CART BUTTONS -->
                                 <?php if ($item_type === 'subscription'): ?>
-                                    <button onclick="addToCart(<?php echo $item['id']; ?>, '<?php echo $safe_title; ?>', <?php echo $item['price']; ?>, 'subscription', 1)" 
-                                            style="background: #0284c7; color: white; border: none; padding: 10px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
+                                    <button type="button" class="btn-add-to-cart" 
+                                            data-id="<?php echo $item['id']; ?>"
+                                            data-title="<?php echo htmlspecialchars($title, ENT_QUOTES, 'UTF-8'); ?>"
+                                            data-price="<?php echo $price; ?>"
+                                            data-type="subscription"
+                                            style="background: #0284c7; color: white; border: none; padding: 10px 14px; border-radius: 4px; font-weight: bold; cursor: pointer;">
                                         Subscribe
                                     </button>
                                 <?php elseif ($item_type === 'booking'): ?>
-                                    <button onclick="addToCart(<?php echo $item['id']; ?>, '<?php echo $safe_title; ?>', <?php echo $item['price']; ?>, 'booking', 1)" 
-                                            style="background: #7c3aed; color: white; border: none; padding: 10px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
+                                    <button type="button" class="btn-add-to-cart"
+                                            data-id="<?php echo $item['id']; ?>"
+                                            data-title="<?php echo htmlspecialchars($title, ENT_QUOTES, 'UTF-8'); ?>"
+                                            data-price="<?php echo $price; ?>"
+                                            data-type="booking"
+                                            style="background: #7c3aed; color: white; border: none; padding: 10px 14px; border-radius: 4px; font-weight: bold; cursor: pointer;">
                                         Book Service
                                     </button>
                                 <?php elseif ($is_out_of_stock): ?>
-                                    <button disabled 
+                                    <button type="button" disabled 
                                             style="background: #94a3b8; color: white; border: none; padding: 10px 14px; border-radius: 4px; font-weight: bold; cursor: not-allowed; opacity: 0.7;">
                                         Out of Stock
                                     </button>
                                 <?php else: ?>
-                                    <button onclick="addToCart(<?php echo $item['id']; ?>, '<?php echo $safe_title; ?>', <?php echo $item['price']; ?>, 'product', 1)" 
-                                            style="background: #ff7300; color: white; border: none; padding: 10px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
+                                    <button type="button" class="btn-add-to-cart"
+                                            data-id="<?php echo $item['id']; ?>"
+                                            data-title="<?php echo htmlspecialchars($title, ENT_QUOTES, 'UTF-8'); ?>"
+                                            data-price="<?php echo $price; ?>"
+                                            data-type="product"
+                                            style="background: #ff7300; color: white; border: none; padding: 10px 14px; border-radius: 4px; font-weight: bold; cursor: pointer;">
                                         Add to Cart
                                     </button>
                                 <?php endif; ?>
@@ -130,12 +148,23 @@ include_once 'includes/header.php';
 
 </main>
 
-<!-- Unified Cart Engine -->
-<script src="js/carts.js"></script>
-
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // Live Search & Category Filter Logic
+        document.querySelectorAll('.btn-add-to-cart').forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                const title = this.getAttribute('data-title');
+                const price = parseFloat(this.getAttribute('data-price')) || 0;
+                const type = this.getAttribute('data-type') || 'product';
+
+                if (typeof addToCart === 'function') {
+                    addToCart(id, title, price, type, 1);
+                } else {
+                    console.error('addToCart function is not available.');
+                }
+            });
+        });
+
         const searchInput = document.getElementById('shopSearch');
         const categorySelect = document.getElementById('categoryFilter');
         const productCards = document.querySelectorAll('.product-card');
@@ -144,13 +173,13 @@ include_once 'includes/header.php';
         if (searchInput && categorySelect) {
             function filterProducts() {
                 const query = searchInput.value.toLowerCase().trim();
-                const selectedCategory = categorySelect.value;
+                const selectedCategory = categorySelect.value.toLowerCase();
                 let visibleCount = 0;
 
                 productCards.forEach(card => {
                     const titleEl = card.querySelector('.product-title');
                     const title = titleEl ? titleEl.textContent.toLowerCase() : '';
-                    const category = card.getAttribute('data-category') || '';
+                    const category = (card.getAttribute('data-category') || '').toLowerCase();
 
                     const matchesQuery = title.includes(query);
                     const matchesCategory = (selectedCategory === 'all') || (category === selectedCategory);
@@ -163,7 +192,9 @@ include_once 'includes/header.php';
                     }
                 });
 
-                if (noResultsMsg) noResultsMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+                if (noResultsMsg) {
+                    noResultsMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+                }
             }
 
             searchInput.addEventListener('input', filterProducts);
