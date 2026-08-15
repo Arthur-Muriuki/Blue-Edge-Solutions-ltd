@@ -4,7 +4,7 @@ An enterprise‑grade website and web application for **Blue Edge Solutions Limi
 
 ---
 
-## 🚀 Key Features
+##  Key Features
 
 - **Multi-Tier Role-Based Access Control (RBAC)**  
   Enforces granular permissions separating `SUPER_ADMIN` and `STAFF_ADMIN` roles. Restricts administrative user management and sensitive system controls exclusively to Super Admins with server-side authorization guards.
@@ -47,7 +47,7 @@ An enterprise‑grade website and web application for **Blue Edge Solutions Limi
 
 ---
 
-## 🛠 Tech Stack
+##  Tech Stack
 
 - **Backend:** PHP 8.x (PDO / MySQL, Native Sessions & Secure Cookies)  
 - **Frontend:** HTML5, CSS3, Vanilla JavaScript (ES6+), Phosphor Icons  
@@ -55,14 +55,14 @@ An enterprise‑grade website and web application for **Blue Edge Solutions Limi
 
 ---
 
-## 📌 Important Notes
+##  Important Notes
 
 - This application is in **active development** — features and schemas may be updated.  
 - Intended for **authorized internal use** and official company clients.  
 
 ---
 
-## 📄 License & Usage
+##  License & Usage
 
 This software and its source code are the proprietary property of **Blue Edge Solutions Limited**.  
 It is intended solely for internal use by authorized personnel or clients of the company.  
