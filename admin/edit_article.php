@@ -1,45 +1,66 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 // Redirect to login if not authenticated
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     header("Location: login.php");
     exit(); 
 }
 
-// Updated path to go up one directory to access includes/
 require_once '../includes/db_connect.php';
 $message = '';
 
 // Check if the form was submitted to UPDATE the article
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_article'])) {
-    $id = $_POST['id'];
-    $title = trim($_POST['title']);
-    $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $_POST['slug'])));
-    $category = trim($_POST['category']);
-    $excerpt = trim($_POST['excerpt']);
-    $content = trim($_POST['content']);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_article'])) {
+    $id        = $_POST['id'];
+    $title     = trim($_POST['title']);
+    $slug      = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $_POST['slug'])));
+    $category  = trim($_POST['category']);
+    $excerpt   = trim($_POST['excerpt']);
+    $content   = trim($_POST['content']);
     $meta_desc = trim($_POST['meta_description']);
 
     $sql = "UPDATE blog_posts SET title = :title, slug = :slug, category = :category, excerpt = :excerpt, content = :content, meta_description = :meta_desc WHERE id = :id";
     $stmt = $pdo->prepare($sql);
     
     try {
-        $stmt->execute(['title' => $title, 'slug' => $slug, 'category' => $category, 'excerpt' => $excerpt, 'content' => $content, 'meta_desc' => $meta_desc, 'id' => $id]);
-        $message = "<div style='background: #dcfce3; color: #166534; padding: 15px; border-radius: 4px; margin-bottom: 20px; font-weight: bold;'>Article updated successfully! <a href='index.php' style='color: #166534; text-decoration: underline;'>Back to Dashboard</a></div>";
+        $stmt->execute([
+            'title'     => $title, 
+            'slug'      => $slug, 
+            'category'  => $category, 
+            'excerpt'   => $excerpt, 
+            'content'   => $content, 
+            'meta_desc' => $meta_desc, 
+            'id'        => $id
+        ]);
+        
+        $message = "<div style='background: #dcfce3; color: #166534; padding: 15px; border-radius: 4px; margin-bottom: 20px; font-weight: bold;'>Article updated successfully! <a href='manage_articles.php' style='color: #166534; text-decoration: underline;'>Back to Articles</a></div>";
+
+        if (function_exists('logActivity')) {
+            logActivity($pdo, 'Updated Article', "Updated blog article '{$title}'");
+        }
     } catch (PDOException $e) {
-        $message = "<div style='background: #fee2e2; color: #b91c1c; padding: 15px; border-radius: 4px; margin-bottom: 20px;'>Error: " . $e->getMessage() . "</div>";
+        $message = "<div style='background: #fee2e2; color: #b91c1c; padding: 15px; border-radius: 4px; margin-bottom: 20px;'>Error: " . htmlspecialchars($e->getMessage()) . "</div>";
     }
 }
 
 // Fetch the existing article data to fill the form
 $article_id = $_GET['id'] ?? null;
-if (!$article_id) { header("Location: index.php"); exit(); }
+if (!$article_id) { 
+    header("Location: manage_articles.php"); 
+    exit(); 
+}
 
 $stmt = $pdo->prepare("SELECT * FROM blog_posts WHERE id = :id");
 $stmt->execute(['id' => $article_id]);
 $article = $stmt->fetch();
 
-if (!$article) { echo "Article not found."; exit(); }
+if (!$article) { 
+    echo "Article not found."; 
+    exit(); 
+}
 
 $base_url = '../';
 $page_title = "Edit Article | Blue Edge Solutions";
@@ -51,7 +72,7 @@ include_once '../includes/header.php';
         
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
             <h1 style="color: #002d62; margin: 0;">Edit Article</h1>
-            <a href="index.php" style="color: #475569; font-weight: bold; text-decoration: none;">&larr; Back to Dashboard</a>
+            <a href="manage_articles.php" style="color: #475569; font-weight: bold; text-decoration: none;">&larr; Back to Articles</a>
         </div>
 
         <?php echo $message; ?>

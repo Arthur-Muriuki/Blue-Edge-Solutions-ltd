@@ -1,10 +1,13 @@
 <?php
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/my_custom_errors.log');
+
 // 1. Session check to protect the page
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// If not logged in, do NOT reveal the login key — send them to the main public homepage (or 404)
+// If not logged in, send them to the main public homepage
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     header("Location: ../index.php");
     exit();
@@ -12,18 +15,40 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     
 require_once '../includes/db_connect.php';
 
+// --- INITIALIZE REQUIRED TABLES ---
+// Moved this out of the order update logic so the table generates automatically on page load
+try {
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS activity_logs (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            admin_id INT DEFAULT NULL,
+            admin_name VARCHAR(100) NOT NULL,
+            admin_avatar VARCHAR(255) DEFAULT NULL,
+            admin_role VARCHAR(50) DEFAULT 'STAFF_ADMIN',
+            action_type VARCHAR(50) NOT NULL,
+            description TEXT NOT NULL,
+            is_read TINYINT(1) DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ");
+} catch (PDOException $e) {
+    error_log("Failed to initialize activity_logs table: " . $e->getMessage());
+}
+
 $message = '';
 $error = '';
 
-// 2. Handle Status Updates (PENDING, COMPLETED, CANCELLED) + Automated Inventory Adjustment
+// 2. Handle Status Updates (PENDING, COMPLETED, CANCELLED) + Automated Inventory Adjustment + Activity Logging
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     $order_id   = intval($_POST['order_id']);
     $new_status = trim($_POST['status']);
     
-    // Fetch previous order status
-    $stmtPrev = $pdo->prepare("SELECT status FROM orders WHERE id = :id");
+    // Fetch previous order status and reference code
+    $stmtPrev = $pdo->prepare("SELECT status, reference_code FROM orders WHERE id = :id");
     $stmtPrev->execute(['id' => $order_id]);
-    $old_status = $stmtPrev->fetchColumn();
+    $orderRow = $stmtPrev->fetch(PDO::FETCH_ASSOC);
+    $old_status = $orderRow['status'] ?? false;
+    $order_ref  = $orderRow['reference_code'] ?? $order_id;
 
     if ($old_status !== false && $old_status !== $new_status) {
         $stmt = $pdo->prepare("UPDATE orders SET status = :status WHERE id = :id");
@@ -77,6 +102,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
             } else {
                 $message = "Order status updated to {$new_status} successfully!";
             }
+
+            // --- LOG STAFF ACTION INTO ACTIVITY LOGS ---
+            try {
+                $staff_id     = $_SESSION['admin_id'] ?? null;
+                $staff_name   = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Staff Member';
+                $staff_avatar = $_SESSION['admin_pfp'] ?? $_SESSION['admin_avatar'] ?? null;
+                $staff_role   = $_SESSION['admin_role'] ?? 'STAFF_ADMIN';
+
+                $logStmt = $pdo->prepare("
+                    INSERT INTO activity_logs (admin_id, admin_name, admin_avatar, admin_role, action_type, description, is_read)
+                    VALUES (:id, :name, :avatar, :role, 'order_action', :desc, 0)
+                ");
+                $logStmt->execute([
+                    ':id'     => $staff_id,
+                    ':name'   => $staff_name,
+                    ':avatar' => $staff_avatar,
+                    ':role'   => $staff_role,
+                    ':desc'   => "Updated Order #{$order_ref} status to {$new_status}"
+                ]);
+            } catch (PDOException $e) {
+                // Log PDO exception to server logs for debugging without blocking UX
+                error_log("Activity Log Error in admin/index.php: " . $e->getMessage());
+            }
+
         } else {
             $error = "Failed to update order status.";
         }
@@ -84,7 +133,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
 }
 
 // 3. Quick metrics overview
-$product_count = $pdo->query("SELECT COUNT(*) FROM products")->fetchColumn();
+$product_count = 0;
+try {
+    $product_count = $pdo->query("SELECT COUNT(*) FROM products")->fetchColumn();
+} catch (PDOException $e) {}
+
+$article_count = 0;
+try {
+    if ($pdo->query("SHOW TABLES LIKE 'articles'")->rowCount() > 0) {
+        $article_count = $pdo->query("SELECT COUNT(*) FROM articles")->fetchColumn();
+    }
+} catch (PDOException $e) {}
 
 try {
     $pending_orders_count = $pdo->query("SELECT COUNT(*) FROM orders WHERE status = 'PENDING'")->fetchColumn();
@@ -112,7 +171,7 @@ include_once '../includes/header.php';
         
         <!-- Welcome Hero Box -->
         <div style="background: #002d62; color: white; padding: 35px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-            <h1 style="margin: 0 0 8px 0; font-size: 2rem;">Welcome back, <?php echo htmlspecialchars(strtolower($_SESSION['admin_fullname'] ?? $_SESSION['admin_username'])); ?>!</h1>
+            <h1 style="margin: 0 0 8px 0; font-size: 2rem;">Welcome back, <?php echo htmlspecialchars($_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Admin'); ?>!</h1>
             <p style="margin: 0; color: #cbd5e1; font-size: 1rem;">Manage client tickets, hardware shop inventory, or blog content below.</p>
         </div>
 
@@ -166,110 +225,110 @@ include_once '../includes/header.php';
                         Add or remove shop hardware and consumables (<?php echo $product_count; ?> active items).
                     </p>
                 </div>
-                <a href="manage_products.php" style="background: #ff7300; color: white; text-align: center; text-decoration: none; padding: 10px; border-radius: 6px; font-weight: bold; font-size: 0.9rem;">
-                    Manage Shop &rarr;
+                <a href="manage_products.php" style="background: #002d62; color: white; text-align: center; text-decoration: none; padding: 10px; border-radius: 6px; font-weight: bold; font-size: 0.9rem;">
+                    Manage Products →
                 </a>
             </div>
 
-            <!-- BLOG & ARTICLES CARD -->
+            <!-- BLOG CONTENT CARD -->
             <div style="background: white; border-radius: 10px; border: 1px solid #e2e8f0; padding: 22px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: space-between;">
                 <div>
                     <div style="background: #f0fdf4; color: #16a34a; width: 45px; height: 45px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; margin-bottom: 15px;">
-                        📝
+                        📰
                     </div>
                     <h3 style="color: #002d62; margin: 0 0 8px 0; font-size: 1.15rem;">Blog Articles</h3>
                     <p style="color: #64748b; font-size: 0.88rem; line-height: 1.4; margin-bottom: 15px;">
-                        Publish and edit technical blog posts and updates for clients.
+                        Publish tech insights, news, and IT infrastructure guides (<?php echo $article_count; ?> posts).
                     </p>
                 </div>
                 <a href="manage_articles.php" style="background: #002d62; color: white; text-align: center; text-decoration: none; padding: 10px; border-radius: 6px; font-weight: bold; font-size: 0.9rem;">
-                    Manage Articles &rarr;
-                </a>
-            </div>
-
-            <!-- LIVE SITE PREVIEW CARD -->
-            <div style="background: white; border-radius: 10px; border: 1px solid #e2e8f0; padding: 22px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: space-between;">
-                <div>
-                    <div style="background: #fefce8; color: #ca8a04; width: 45px; height: 45px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; margin-bottom: 15px;">
-                        🌐
-                    </div>
-                    <h3 style="color: #002d62; margin: 0 0 8px 0; font-size: 1.15rem;">Public Website</h3>
-                    <p style="color: #64748b; font-size: 0.88rem; line-height: 1.4; margin-bottom: 15px;">
-                        Open the public homepage to view the website as a client.
-                    </p>
-                </div>
-                <a href="../index.php" target="_blank" style="background: #e2e8f0; color: #002d62; text-align: center; text-decoration: none; padding: 10px; border-radius: 6px; font-weight: bold; font-size: 0.9rem;">
-                    Open Website &rarr;
+                    Manage Articles →
                 </a>
             </div>
 
         </div>
 
-        <!-- RECENT ORDERS TABLE -->
-        <div id="orders-section" style="scroll-margin-top: 80px; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; overflow-x: auto;">
-            <h3 style="color: #002d62; margin-top: 0; margin-bottom: 20px; font-size: 1.25rem;">Client Orders & Service Tickets (<?php echo count($orders); ?>)</h3>
+        <!-- ORDERS MANAGEMENT SECTION -->
+        <div id="orders-section" style="background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <h2 style="color: #002d62; margin: 0; font-size: 1.4rem;">Recent Orders & Inquiries</h2>
+                    <p style="color: #64748b; margin: 4px 0 0 0; font-size: 0.88rem;">Track client requests and adjust order processing statuses</p>
+                </div>
+            </div>
 
-            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
-                <thead>
-                    <tr style="border-bottom: 2px solid #e2e8f0; color: #64748b;">
-                        <th style="padding: 10px;">Reference</th>
-                        <th style="padding: 10px;">Client</th>
-                        <th style="padding: 10px;">Phone</th>
-                        <th style="padding: 10px;">Items</th>
-                        <th style="padding: 10px;">Total</th>
-                        <th style="padding: 10px;">Status</th>
-                        <th style="padding: 10px; text-align: right;">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (!empty($orders)): ?>
-                        <?php foreach ($orders as $o): ?>
-                            <tr style="border-bottom: 1px solid #f1f5f9;">
-                                <td style="padding: 10px;">
-                                    <a href="../ticket.php?ref=<?php echo htmlspecialchars($o['reference_code']); ?>" target="_blank" style="font-weight: bold; color: #0284c7; text-decoration: none;">
-                                        <?php echo htmlspecialchars($o['reference_code']); ?> ↗
-                                    </a>
-                                </td>
-                                <td style="padding: 10px; font-weight: bold; color: #1e293b;">
-                                    <?php echo htmlspecialchars($o['client_name']); ?>
-                                </td>
-                                <td style="padding: 10px; color: #475569;">
-                                    <?php echo htmlspecialchars($o['client_phone']); ?>
-                                </td>
-                                <td style="padding: 10px; color: #475569;">
-                                    <?php echo intval($o['total_items']); ?> item(s)
-                                </td>
-                                <td style="padding: 10px; font-weight: bold; color: #166534;">
-                                    Ksh <?php echo number_format($o['total_amount'], 2); ?>
-                                </td>
-                                <td style="padding: 10px;">
-                                    <form method="POST" action="index.php#orders-section" style="margin: 0;">
-                                        <input type="hidden" name="order_id" value="<?php echo $o['id']; ?>">
-                                        <select name="status" onchange="this.form.submit()" style="padding: 4px 8px; border-radius: 4px; border: 1px solid #cbd5e1; font-weight: bold; font-size: 0.85rem; color: <?php echo $o['status'] === 'COMPLETED' ? '#166534' : ($o['status'] === 'CANCELLED' ? '#dc2626' : '#d97706'); ?>;">
-                                            <option value="PENDING" <?php echo $o['status'] === 'PENDING' ? 'selected' : ''; ?>>PENDING</option>
-                                            <option value="COMPLETED" <?php echo $o['status'] === 'COMPLETED' ? 'selected' : ''; ?>>COMPLETED</option>
-                                            <option value="CANCELLED" <?php echo $o['status'] === 'CANCELLED' ? 'selected' : ''; ?>>CANCELLED</option>
-                                        </select>
-                                        <input type="hidden" name="update_status" value="1">
-                                    </form>
-                                </td>
-                                <td style="padding: 10px; text-align: right;">
-                                    <a href="../ticket.php?ref=<?php echo htmlspecialchars($o['reference_code']); ?>" target="_blank" style="background: #f1f5f9; color: #002d62; text-decoration: none; padding: 6px 12px; border-radius: 4px; font-size: 0.85rem; font-weight: bold;">
-                                        View Ticket
-                                    </a>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; color: #475569;">
+                            <th style="padding: 12px 15px;">Reference / ID</th>
+                            <th style="padding: 12px 15px;">Client Name</th>
+                            <th style="padding: 12px 15px;">Contact Info</th>
+                            <th style="padding: 12px 15px;">Amount</th>
+                            <th style="padding: 12px 15px;">Date</th>
+                            <th style="padding: 12px 15px;">Status</th>
+                            <th style="padding: 12px 15px; text-align: center;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($orders)): ?>
+                            <?php foreach ($orders as $o): ?>
+                                <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                                    <td style="padding: 14px 15px; font-weight: bold; color: #002d62;">
+                                        #<?php echo htmlspecialchars($o['reference_code'] ?? $o['id']); ?>
+                                    </td>
+                                    <td style="padding: 14px 15px; font-weight: 600; color: #334155;">
+                                        <?php echo htmlspecialchars($o['client_name'] ?? 'N/A'); ?>
+                                    </td>
+                                    <td style="padding: 14px 15px; color: #64748b;">
+                                        <div><?php echo htmlspecialchars($o['email'] ?? ''); ?></div>
+                                        <small style="color: #94a3b8;"><?php echo htmlspecialchars($o['phone'] ?? ''); ?></small>
+                                    </td>
+                                    <td style="padding: 14px 15px; font-weight: bold; color: #0f172a;">
+                                        Ksh <?php echo number_format($o['total_amount'] ?? 0, 2); ?>
+                                    </td>
+                                    <td style="padding: 14px 15px; color: #64748b; font-size: 0.82rem;">
+                                        <?php echo date('M d, Y H:i', strtotime($o['created_at'])); ?>
+                                    </td>
+                                    <td style="padding: 14px 15px;">
+                                        <?php 
+                                            $st = strtoupper($o['status'] ?? 'PENDING');
+                                            $bg = ($st === 'COMPLETED') ? '#dcfce7' : (($st === 'CANCELLED') ? '#fee2e2' : '#fef3c7');
+                                            $fg = ($st === 'COMPLETED') ? '#15803d' : (($st === 'CANCELLED') ? '#b91c1c' : '#d97706');
+                                        ?>
+                                        <span style="background: <?php echo $bg; ?>; color: <?php echo $fg; ?>; font-size: 0.72rem; font-weight: 800; padding: 4px 10px; border-radius: 12px; display: inline-block;">
+                                            <?php echo $st; ?>
+                                        </span>
+                                    </td>
+                                    <td style="padding: 14px 15px; text-align: center;">
+                                        <form method="POST" action="index.php#orders-section" style="display: flex; gap: 6px; justify-content: center; align-items: center;">
+                                            <input type="hidden" name="order_id" value="<?php echo $o['id']; ?>">
+                                            <select name="status" style="padding: 5px 8px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.8rem; background: white; color: #334155;">
+                                                <option value="PENDING" <?php echo ($st === 'PENDING') ? 'selected' : ''; ?>>Pending</option>
+                                                <option value="COMPLETED" <?php echo ($st === 'COMPLETED') ? 'selected' : ''; ?>>Completed</option>
+                                                <option value="CANCELLED" <?php echo ($st === 'CANCELLED') ? 'selected' : ''; ?>>Cancelled</option>
+                                            </select>
+                                            <button type="submit" name="update_status" style="background: #002d62; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-weight: bold; font-size: 0.78rem; cursor: pointer;">
+                                                Save
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="7" style="padding: 30px; text-align: center; color: #94a3b8;">
+                                    No orders found in the database.
                                 </td>
                             </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="7" style="padding: 20px; text-align: center; color: #64748b;">No orders or tickets found yet.</td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
     </div>
 </main>
 
-<?php include_once '../includes/footer.php'; ?>
+</body>
+</html>

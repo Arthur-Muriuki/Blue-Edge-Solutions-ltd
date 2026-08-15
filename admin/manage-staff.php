@@ -81,6 +81,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ':role'      => $role
                     ]);
                     $message = "New sub-admin account '{$name}' created successfully!";
+
+                    if (function_exists('logActivity')) {
+                        logActivity($pdo, 'Created Staff Account', "Created new admin account '{$name}' with role {$role}");
+                    }
                 }
             }
         } else {
@@ -98,12 +102,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($pwdCheck !== true) {
                 $error = "Reset failed: " . $pwdCheck;
             } else {
+                // Fetch target staff member's details prior to reset
+                $targetStmt = $pdo->prepare("SELECT username, full_name FROM admins WHERE id = :id");
+                $targetStmt->execute([':id' => $staff_id]);
+                $targetUser = $targetStmt->fetch();
+                $targetName = $targetUser ? ($targetUser['full_name'] ?? $targetUser['username']) : "ID #{$staff_id}";
+
                 $stmt = $pdo->prepare("UPDATE admins SET password = :password WHERE id = :id");
                 $stmt->execute([
                     ':password' => password_hash($new_password, PASSWORD_DEFAULT),
                     ':id'       => $staff_id
                 ]);
                 $message = "Staff password updated successfully!";
+
+                if (function_exists('logActivity')) {
+                    logActivity($pdo, 'Reset Staff Password', "Reset password for admin account '{$targetName}'");
+                }
             }
         } else {
             $error = "Password cannot be blank.";
@@ -117,9 +131,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($staff_id === (int)$_SESSION['admin_id']) {
             $error = "You cannot delete your own Super Admin account!";
         } elseif ($staff_id > 0) {
+            // Fetch target staff member's details prior to deletion
+            $targetStmt = $pdo->prepare("SELECT username, full_name FROM admins WHERE id = :id");
+            $targetStmt->execute([':id' => $staff_id]);
+            $targetUser = $targetStmt->fetch();
+            $targetName = $targetUser ? ($targetUser['full_name'] ?? $targetUser['username']) : "ID #{$staff_id}";
+
             $stmt = $pdo->prepare("DELETE FROM admins WHERE id = :id");
             $stmt->execute([':id' => $staff_id]);
             $message = "Staff account removed successfully.";
+
+            if (function_exists('logActivity')) {
+                logActivity($pdo, 'Deleted Staff Account', "Removed admin account '{$targetName}' (ID: {$staff_id})");
+            }
         }
     }
 }

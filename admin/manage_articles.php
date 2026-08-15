@@ -1,6 +1,9 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 // 1. Session check to protect the page
-session_start();
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     header("Location: login.php");
     exit();
@@ -15,9 +18,20 @@ $error = '';
 // 3. Handle Article Deletion
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
     $id = intval($_GET['id']);
+
+    // Fetch title prior to deletion for logging
+    $fetchStmt = $pdo->prepare("SELECT title FROM blog_posts WHERE id = :id LIMIT 1");
+    $fetchStmt->execute(['id' => $id]);
+    $targetArticle = $fetchStmt->fetch(PDO::FETCH_ASSOC);
+    $articleTitle = $targetArticle['title'] ?? "ID #{$id}";
+
     $stmt = $pdo->prepare("DELETE FROM blog_posts WHERE id = :id");
     if ($stmt->execute(['id' => $id])) {
         $message = "Article deleted successfully.";
+
+        if (function_exists('logActivity')) {
+            logActivity($pdo, 'Deleted Article', "Deleted blog article '{$articleTitle}'");
+        }
     } else {
         $error = "Failed to delete article.";
     }

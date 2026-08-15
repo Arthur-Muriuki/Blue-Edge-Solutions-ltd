@@ -53,6 +53,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $updateStmt = $pdo->prepare("UPDATE admins SET last_login = NOW() WHERE id = :id");
             $updateStmt->execute([':id' => $admin['id']]);
 
+            // Log activity audit record directly to the database
+            try {
+                $logStmt = $pdo->prepare("
+                    INSERT INTO activity_logs 
+                    (user_id, username, user_role, action, details, ip_address, is_read) 
+                    VALUES 
+                    (:user_id, :username, :user_role, :action, :details, :ip, 0)
+                ");
+                $logStmt->execute([
+                    ':user_id'   => $admin['id'],
+                    ':username'  => $admin['username'],
+                    ':user_role' => $admin['role'],
+                    ':action'    => 'Admin Login',
+                    ':details'   => 'Signed into administrative portal',
+                    ':ip'        => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'
+                ]);
+            } catch (PDOException $e) {
+                // Fail silently so a logging error doesn't stop the admin from logging in
+            }
+
             header("Location: index.php");
             exit();
         } else {

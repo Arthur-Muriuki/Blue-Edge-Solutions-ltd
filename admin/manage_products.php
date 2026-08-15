@@ -28,9 +28,20 @@ try {
 // 3. Handle Product Deletion
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
     $id = intval($_GET['id']);
+    
+    // Fetch product title prior to deletion for log context
+    $fetchStmt = $pdo->prepare("SELECT title FROM products WHERE id = :id");
+    $fetchStmt->execute(['id' => $id]);
+    $prod = $fetchStmt->fetch();
+    $itemTitle = $prod ? $prod['title'] : "Item #{$id}";
+
     $stmt = $pdo->prepare("DELETE FROM products WHERE id = :id");
     if ($stmt->execute(['id' => $id])) {
         $message = "Product deleted successfully.";
+        
+        if (function_exists('logActivity')) {
+            logActivity($pdo, 'Deleted Product', "Deleted product '{$itemTitle}' (ID: {$id})");
+        }
     } else {
         $error = "Failed to delete product.";
     }
@@ -39,11 +50,21 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
 // 4. Handle Quick Inline Stock Updates
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_stock'])) {
     $product_id = intval($_POST['product_id']);
-    $new_stock  = max(0, intval($_POST['stock_qty']));
+    $new_stock   = max(0, intval($_POST['stock_qty']));
+
+    // Fetch product title for log context
+    $fetchStmt = $pdo->prepare("SELECT title FROM products WHERE id = :id");
+    $fetchStmt->execute(['id' => $product_id]);
+    $prod = $fetchStmt->fetch();
+    $itemTitle = $prod ? $prod['title'] : "Item #{$product_id}";
 
     $stmt = $pdo->prepare("UPDATE products SET stock = :stock WHERE id = :id");
     if ($stmt->execute(['stock' => $new_stock, 'id' => $product_id])) {
         $message = "Stock level updated successfully!";
+        
+        if (function_exists('logActivity')) {
+            logActivity($pdo, 'Updated Stock Level', "Set stock for '{$itemTitle}' (ID: {$product_id}) to {$new_stock}");
+        }
     } else {
         $error = "Failed to update stock level.";
     }
@@ -106,6 +127,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
             'item_type'   => $item_type
         ])) {
             $message = "New item added to inventory successfully!";
+            
+            if (function_exists('logActivity')) {
+                logActivity($pdo, 'Created Product', "Added '{$title}' in {$category} (Price: Ksh " . number_format($price, 2) . ")");
+            }
         } else {
             $error = "Failed to add product to database.";
         }
